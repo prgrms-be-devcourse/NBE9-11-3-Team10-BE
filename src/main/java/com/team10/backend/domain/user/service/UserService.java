@@ -80,7 +80,7 @@ public class UserService {
     @Transactional
     public UserResponse updateMyProfileImage(Long id, ProfileImageUpdateRequest request) {
         User user = getUserEntity(id);
-        updateProfileImage(user, request.imageUrl());
+        updateProfileImage(user, request.imageUrl);
         return UserResponse.from(user);
     }
 
