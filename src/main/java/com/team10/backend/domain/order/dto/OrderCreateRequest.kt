@@ -1,11 +1,9 @@
-package com.team10.backend.domain.order.dto;
+package com.team10.backend.domain.order.dto
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-
-import java.util.List;
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 
 /*
 * {
@@ -16,17 +14,22 @@ import java.util.List;
     { "productId": 105, "quantity": 1 }
   ]
 }*/
-public record OrderCreateRequest(
+data class OrderCreateRequest(
+    @JvmField
+    @NotBlank(message = "배송 주소는 필수입니다")
+    val deliveryAddress: String,
 
-        @NotBlank(message = "배송 주소는 필수입니다")
-        String deliveryAddress,
-
-        @NotEmpty(message = "상품을 최소 1개 이상 선택해야 합니다")
-        List<OrderProductReq> orderProducts
+    @JvmField
+    @NotEmpty(message = "상품을 최소 1개 이상 선택해야 합니다")
+    @field:Valid
+    val orderProducts: List<OrderProductReq>
 ) {
-    public record OrderProductReq(
-            Long productId,
-            @Min(1)
-            int quantity
-    ) {}
+    data class OrderProductReq(
+        @JvmField
+        val productId: Long,
+
+        @JvmField
+        @Min(1)
+        val quantity: Int
+    )
 }
