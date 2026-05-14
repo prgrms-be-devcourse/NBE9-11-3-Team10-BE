@@ -1,40 +1,47 @@
-package com.team10.backend.domain.order.dto.search.buyer;
+package com.team10.backend.domain.order.dto.search.buyer
 
-import com.team10.backend.domain.order.entity.Order;
-import com.team10.backend.domain.order.entity.OrderProducts;
+import com.team10.backend.domain.order.entity.Order
+import com.team10.backend.domain.order.entity.OrderProducts
+import com.team10.backend.domain.order.entity.Payment
+import java.time.LocalDateTime
+import java.util.function.Function
 
-import java.time.LocalDateTime;
-
-public record OrderSummaryResponse(
-        String orderNumber,
-        int totalAmount,
-        String status,
-        String representativeProductName,
-        int totalQuantity,
-        LocalDateTime createdAt
+data class OrderSummaryResponse(
+    @JvmField val orderNumber: String,
+    @JvmField val totalAmount: Int,
+    @JvmField val status: String,
+    @JvmField val representativeProductName: String,
+    @JvmField val totalQuantity: Int,
+    @JvmField val createdAt: LocalDateTime
 ) {
-    public static OrderSummaryResponse from(Order order) {
-        String productName = order.getOrderProducts().get(0).getProduct().getProductName();
-        int extraCount = order.getOrderProducts().size() - 1;
-        String representativeName = extraCount > 0 ?
-                productName + " 외 " + extraCount + "건" : productName;
+    companion object {
+        @JvmStatic
+        fun from(order: Order): OrderSummaryResponse {
+            // 1. 대표 상품명 가공 (코틀린의 문자열 템플릿 활용)
+            val firstProduct = order.orderProducts.firstOrNull()?.product
+            val productName = firstProduct?.productName ?: "알 수 없는 상품"
+            val extraCount = order.orderProducts.size - 1
 
-        int totalQty = order.getOrderProducts().stream()
-                .mapToInt(OrderProducts::getQuantity)
-                .sum();
+            val representativeName = if (extraCount > 0) {
+                "$productName 외 ${extraCount}건"
+            } else {
+                productName
+            }
 
-        String paymentStatus = order.getPayments().stream()
-                .findFirst()
-                .map(payment -> payment.getStatus().name())
-                .orElse("READY"); // 결제 전 상태를 기본값으로 설정
+            // 2. 총 수량 계산 (Stream 대신 코틀린 sumOf 활용)
+            val totalQty = order.orderProducts.sumOf { it.quantity }
 
-        return new OrderSummaryResponse(
-                order.getOrderNumber(),
-                order.getTotalAmount(),
-                paymentStatus,
-                representativeName,
-                totalQty,
-                order.getCreatedAt()
-        );
+            // 3. 결제 상태 추출 (Safe call과 elvis 연산자 활용)
+            val paymentStatus = order.payments.firstOrNull()?.status?.name ?: "READY"
+
+            return OrderSummaryResponse(
+                orderNumber = order.orderNumber,
+                totalAmount = order.totalAmount,
+                status = paymentStatus,
+                representativeProductName = representativeName,
+                totalQuantity = totalQty,
+                createdAt = order.createdAt
+            )
+        }
     }
 }
