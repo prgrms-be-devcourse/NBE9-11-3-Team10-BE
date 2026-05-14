@@ -238,6 +238,7 @@ class AuthServiceTest {
                         .role(Role.BUYER)
                         .build();
 
+        ReflectionTestUtils.setField(user, "id", 1L);
         given(this.userRepository.findByEmail(request.email)).willReturn(Optional.of(user));
         given(passwordEncoder.matches(request.password, user.getPassword()))
                             .willReturn(true);
@@ -248,7 +249,7 @@ class AuthServiceTest {
         LoginResult result = authService.login(request);
 
         // then
-        assertEquals(user.getEmail(), result.response().email());
+        assertEquals(user.getEmail(), result.response().email);
         assertEquals("test-access-token", result.accessToken());
         assertEquals("test-refresh-token", result.refreshToken());
     }

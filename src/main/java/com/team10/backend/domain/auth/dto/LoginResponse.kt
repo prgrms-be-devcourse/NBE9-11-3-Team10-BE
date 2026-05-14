@@ -1,22 +1,21 @@
-package com.team10.backend.domain.auth.dto;
+package com.team10.backend.domain.auth.dto
 
-import com.team10.backend.domain.user.entity.User;
-import com.team10.backend.domain.user.enums.Role;
+import com.team10.backend.domain.user.entity.User
+import com.team10.backend.domain.user.enums.Role
 
-public record LoginResponse(
-        Long id,
-        String email,
-        String nickname,
-        Role role
+data class LoginResponse(
+    val id: Long,
+    @JvmField val email: String,
+    val nickname: String,
+    val role: Role
 ) {
-
-    public static LoginResponse from(User user) {
-        return new LoginResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getNickname(),
-                user.getRole()
-        );
+    companion object {
+        @JvmStatic
+        fun from(user: User) = LoginResponse(
+                user.id,
+                user.email,
+                user.nickname,
+                user.role
+        )
     }
-
 }
