@@ -1,7 +1,7 @@
-package com.team10.backend.domain.order.dto;
+package com.team10.backend.domain.order.dto
 
-public record OrderDeleteResponse(
-        String orderNumber,
-        String status // "DELETED" 등
-) {
-}
+
+data class OrderDeleteResponse(
+    val orderNumber: String?,
+    val status: String? // "DELETED" 등
+)
