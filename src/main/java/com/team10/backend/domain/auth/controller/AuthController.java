@@ -68,8 +68,8 @@ public class AuthController {
         String refreshToken = cookieUtil.getCookieValue(request, REFRESH_TOKEN);
         RefreshResult result = refreshTokenService.refresh(refreshToken);
 
-        cookieUtil.addCookie(response, ACCESS_TOKEN, result.accessToken());
-        cookieUtil.addCookie(response, REFRESH_TOKEN, result.refreshToken());
+        cookieUtil.addCookie(response, ACCESS_TOKEN, result.accessToken);
+        cookieUtil.addCookie(response, REFRESH_TOKEN, result.refreshToken);
 
         return ApiResponse.ok();
     }

@@ -1,6 +1,6 @@
-package com.team10.backend.domain.auth.dto;
+package com.team10.backend.domain.auth.dto
 
-public record RefreshResult(
-        String accessToken,
-        String refreshToken
-) {}
+data class RefreshResult(
+    @JvmField val accessToken: String,
+    @JvmField val refreshToken: String
+)
