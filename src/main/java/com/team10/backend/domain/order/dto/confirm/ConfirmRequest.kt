@@ -1,9 +1,9 @@
-package com.team10.backend.domain.order.dto.confirm;
+package com.team10.backend.domain.order.dto.confirm
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record ConfirmRequest(
-        String paymentKey,
-        String orderId,
-        Long amount
-) {}
+
+data class ConfirmRequest(
+     @JvmField val paymentKey: String,
+     @JvmField val orderId: String,
+     @JvmField val amount: Long
+)
