@@ -1,15 +1,18 @@
-package com.team10.backend.domain.order.dto.search.seller;
+package com.team10.backend.domain.order.dto.search.seller
 
-import com.team10.backend.domain.user.entity.User;
+import com.team10.backend.domain.user.entity.User
 
-import java.util.List;
-
-
-public record SellerOrderListResponse(
-        Long sellerId,
-        List<SellerOrderSummaryResponse> sales
+data class SellerOrderListResponse(
+    @JvmField val sellerId: Long,
+    @JvmField val sales: List<SellerOrderSummaryResponse>
 ) {
-    public static SellerOrderListResponse of(User seller, List<SellerOrderSummaryResponse> sales) {
-        return new SellerOrderListResponse(seller.getId(), sales);
+    companion object {
+        @JvmStatic
+        fun of(seller: User, sales: List<SellerOrderSummaryResponse>): SellerOrderListResponse {
+            return SellerOrderListResponse(
+                sellerId = seller.id, // 프로퍼티 접근
+                sales = sales
+            )
+        }
     }
 }
