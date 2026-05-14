@@ -1,3 +1,4 @@
+
 package com.team10.backend.domain.product.service;
 
 import com.team10.backend.domain.image.service.ImageUploadService;
@@ -38,12 +39,12 @@ public class ProductService {
 
         Product product = new Product(
                 user,
-                request.type(),
-                request.productName(),
-                request.description(),
-                request.price(),
-                request.stock(),
-                request.imageUrl()
+                request.getType(),
+                request.getProductName(),
+                request.getDescription(),
+                request.getPrice(),
+                request.getStock(),
+                request.getImageUrl()
         );
 
         Product savedProduct = productRepository.save(product);
@@ -108,15 +109,15 @@ public class ProductService {
     public ProductDetailResponse update(Long userId, Long productId, ProductUpdateRequest request) {
 
         Product product = getAuthorizedProduct(userId, productId);
-        deletePreviousImageIfChanged(product.getImageUrl(), request.imageUrl());
+        deletePreviousImageIfChanged(product.getImageUrl(), request.getImageUrl());
 
         product.update(
-                request.type(),
-                request.productName(),
-                request.description(),
-                request.price(),
-                request.imageUrl(),
-                request.status()
+                request.getType(),
+                request.getProductName(),
+                request.getDescription(),
+                request.getPrice(),
+                request.getImageUrl(),
+                request.getStatus()
         );
 
         return ProductDetailResponse.from(product);
