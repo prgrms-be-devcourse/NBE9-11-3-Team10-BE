@@ -1,6 +1,5 @@
-package com.team10.backend.domain.user.enums;
+package com.team10.backend.domain.user.enums
 
-public enum UserStatus {
-    ACTIVE,
-    DELETED
+enum class UserStatus {
+    ACTIVE
 }
