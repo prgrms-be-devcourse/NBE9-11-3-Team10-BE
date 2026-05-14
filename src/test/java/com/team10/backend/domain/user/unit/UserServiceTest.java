@@ -47,6 +47,7 @@ public class UserServiceTest {
     void getUserProfile_success() {
         // given
         User user = UserTestFixture.createBuyer();
+        ReflectionTestUtils.setField(user, "id", 1L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
@@ -55,7 +56,7 @@ public class UserServiceTest {
 
         // then
         assertNotNull(response);
-        assertEquals(user.getName(), response.name());
+        assertEquals(user.getName(), response.name);
     }
 
     @Test
@@ -106,15 +107,16 @@ public class UserServiceTest {
         );
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        ReflectionTestUtils.setField(user, "id", 1L);
 
         // when
         UserResponse response = userService.updateMyUserProfile(1L, request);
 
         // then
         assertNotNull(response);
-        assertEquals("새로운닉네임", response.nickname());
-        assertEquals("010-9999-9999", response.phoneNumber());
-        assertEquals("부산", response.address());
+        assertEquals("새로운닉네임", response.nickname);
+        assertEquals("010-9999-9999", response.phoneNumber);
+        assertEquals("부산", response.address);
     }
 
     @Test
@@ -127,10 +129,11 @@ public class UserServiceTest {
                 new ProfileImageUpdateRequest("https://new-image.test/profile.jpg");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        ReflectionTestUtils.setField(user, "id", 1L);
 
         UserResponse response = userService.updateMyProfileImage(1L, request);
 
-        assertEquals("https://new-image.test/profile.jpg", response.imageUrl());
+        assertEquals("https://new-image.test/profile.jpg", response.imageUrl);
         verify(imageUploadService).deleteIfManaged("https://old-image.test/profile.jpg");
     }
 
@@ -141,10 +144,11 @@ public class UserServiceTest {
         user.updateProfileImage("https://old-image.test/profile.jpg");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        ReflectionTestUtils.setField(user, "id", 1L);
 
         UserResponse response = userService.deleteMyProfileImage(1L);
 
-        assertNull(response.imageUrl());
+        assertNull(response.imageUrl);
         verify(imageUploadService).deleteIfManaged("https://old-image.test/profile.jpg");
     }
 
