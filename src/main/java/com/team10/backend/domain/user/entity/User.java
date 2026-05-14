@@ -49,12 +49,12 @@ public class User extends BaseEntity {
                               Role role
     ) {
         return User.builder()
-                .email(request.email())
+                .email(request.email)
                 .password(hashedPassword)
-                .name(request.name())
-                .nickname(request.nickname())
-                .phoneNumber(request.phoneNumber())
-                .address(request.address())
+                .name(request.name)
+                .nickname(request.nickname)
+                .phoneNumber(request.phoneNumber)
+                .address(request.address)
                 .userStatus(UserStatus.ACTIVE)
                 .role(role)
                 .build();

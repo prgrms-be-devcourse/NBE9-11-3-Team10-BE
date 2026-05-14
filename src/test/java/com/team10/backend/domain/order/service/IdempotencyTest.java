@@ -4,7 +4,6 @@ import com.team10.backend.domain.order.dto.confirm.ConfirmRequest;
 import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse;
 import com.team10.backend.domain.order.entity.Order;
 import com.team10.backend.domain.order.entity.Payment;
-import com.team10.backend.domain.order.enums.IdempotencyStatus;
 import com.team10.backend.domain.order.enums.PaymentStatus;
 import com.team10.backend.domain.order.enums.RequestType;
 import com.team10.backend.domain.order.repository.OrderRepository;
@@ -23,15 +22,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -320,6 +322,6 @@ public class IdempotencyTest {
         Payment savedRecord = paymentRepository.findByOrderNumberAndType(orderId, RequestType.PAYMENT).orElseThrow();
         assertThat(savedRecord.getType()).isEqualTo(RequestType.PAYMENT);
 
-        log.info("외부 API 호출 없이 DB 데이터를 반환했습니다.");
+//        log.info("외부 API 호출 없이 DB 데이터를 반환했습니다.");
     }
 }
