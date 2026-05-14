@@ -52,8 +52,8 @@ public class FeedPostService {
         validateSeller(currentUser);
 
         FeedPost feedPost = new FeedPost(
-                requestDto.imageUrl(),
-                requestDto.content(),
+                requestDto.imageUrl,
+                requestDto.content,
                 currentUser
         );
 
@@ -72,13 +72,13 @@ public class FeedPostService {
 
         String oldImageUrl = feedPost.getImageUrl();
 
-        String newImageUrl = requestDto.imageUrl();
+        String newImageUrl = requestDto.imageUrl;
 
         if (!Objects.equals(oldImageUrl, newImageUrl)) {
             imageUploadService.deleteIfManaged(oldImageUrl);
         }
 
-        feedPost.update(newImageUrl, requestDto.content());
+        feedPost.update(newImageUrl, requestDto.content);
 
         return UpdateFeedResponseDto.from(feedPost);
     }
