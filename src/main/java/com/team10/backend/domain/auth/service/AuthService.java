@@ -29,9 +29,9 @@ public class AuthService {
     public AuthRegisterResponse register(AuthRegisterRequest request) {
         validateDuplicateUser(request);
 
-        String encodedPassword = passwordEncoder.encode(request.password());
+        String encodedPassword = passwordEncoder.encode(request.password);
 
-        Role role = request.role();
+        Role role = request.role;
 
         User user = User.create(request, encodedPassword, role);
 
@@ -46,10 +46,10 @@ public class AuthService {
     }
 
     private void validateDuplicateUser(AuthRegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+        if (userRepository.existsByEmail(request.email)) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
         }
-        if (userRepository.existsByNickname(request.nickname())) {
+        if (userRepository.existsByNickname(request.nickname)) {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
     }

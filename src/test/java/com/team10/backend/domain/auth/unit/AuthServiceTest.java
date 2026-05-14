@@ -22,7 +22,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,11 +71,14 @@ class AuthServiceTest {
                 Role.BUYER
         );
 
-        given(userRepository.existsByEmail(request.email())).willReturn(false);
-        given(userRepository.existsByNickname(request.nickname())).willReturn(false);
-        given(passwordEncoder.encode(request.password())).willReturn("encodedPassword");
+        given(userRepository.existsByEmail(request.email)).willReturn(false);
+        given(userRepository.existsByNickname(request.nickname)).willReturn(false);
+        given(passwordEncoder.encode(request.password)).willReturn("encodedPassword");
 
-        User user = User.create(request, "encodedPassword", request.role());
+        User user = User.create(request, "encodedPassword", request.role);
+        ReflectionTestUtils.setField(user, "id", 1L);
+        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now());
         given(userRepository.save(any(User.class))).willReturn(user);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -82,19 +87,19 @@ class AuthServiceTest {
         AuthRegisterResponse response = authService.register(request);
 
         // then
-        then(userRepository).should(times(1)).existsByEmail(request.email());
-        then(userRepository).should(times(1)).existsByNickname(request.nickname());
-        then(passwordEncoder).should(times(1)).encode(request.password());
+        then(userRepository).should(times(1)).existsByEmail(request.email);
+        then(userRepository).should(times(1)).existsByNickname(request.nickname);
+        then(passwordEncoder).should(times(1)).encode(request.password);
         then(userRepository).should(times(1)).save(userCaptor.capture());
 
         User savedUser = userCaptor.getValue();
 
-        assertEquals(request.email(), savedUser.getEmail());
+        assertEquals(request.email, savedUser.getEmail());
         assertEquals("encodedPassword", savedUser.getPassword());
         assertEquals(Role.BUYER, savedUser.getRole());
         assertNull(savedUser.getSellerInfo());
 
-        assertEquals(request.email(), response.email());
+        assertEquals(request.email, response.email);
     }
 
     @Test
@@ -111,11 +116,14 @@ class AuthServiceTest {
                 Role.SELLER
         );
 
-        given(userRepository.existsByEmail(request.email())).willReturn(false);
-        given(userRepository.existsByNickname(request.nickname())).willReturn(false);
-        given(passwordEncoder.encode(request.password())).willReturn("encodedPassword");
+        given(userRepository.existsByEmail(request.email)).willReturn(false);
+        given(userRepository.existsByNickname(request.nickname)).willReturn(false);
+        given(passwordEncoder.encode(request.password)).willReturn("encodedPassword");
 
-        User user = User.create(request, "encodedPassword", request.role());
+        User user = User.create(request, "encodedPassword", request.role);
+        ReflectionTestUtils.setField(user, "id", 1L);
+        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now());
         given(userRepository.save(any(User.class))).willReturn(user);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -124,9 +132,9 @@ class AuthServiceTest {
         AuthRegisterResponse response = authService.register(request);
 
         // then
-        then(userRepository).should(times(1)).existsByEmail(request.email());
-        then(userRepository).should(times(1)).existsByNickname(request.nickname());
-        then(passwordEncoder).should(times(1)).encode(request.password());
+        then(userRepository).should(times(1)).existsByEmail(request.email);
+        then(userRepository).should(times(1)).existsByNickname(request.nickname);
+        then(passwordEncoder).should(times(1)).encode(request.password);
         then(userRepository).should(times(1)).save(userCaptor.capture());
 
         User savedUser = userCaptor.getValue();
@@ -149,7 +157,7 @@ class AuthServiceTest {
                 Role.BUYER
         );
 
-        given(userRepository.existsByEmail(request.email())).willReturn(true);
+        given(userRepository.existsByEmail(request.email)).willReturn(true);
 
         // when & then
         BusinessException ex = assertThrows(BusinessException.class,
@@ -157,7 +165,7 @@ class AuthServiceTest {
 
         assertEquals(ErrorCode.DUPLICATE_EMAIL, ex.getErrorCode());
 
-        then(userRepository).should(times(1)).existsByEmail(request.email());
+        then(userRepository).should(times(1)).existsByEmail(request.email);
         then(userRepository).should(never()).save(any());
         then(passwordEncoder).should(never()).encode(any());
     }
@@ -176,8 +184,8 @@ class AuthServiceTest {
                 Role.BUYER
         );
 
-        given(userRepository.existsByEmail(request.email())).willReturn(false);
-        given(userRepository.existsByNickname(request.nickname())).willReturn(true);
+        given(userRepository.existsByEmail(request.email)).willReturn(false);
+        given(userRepository.existsByNickname(request.nickname)).willReturn(true);
 
         // when & then
         BusinessException ex = assertThrows(BusinessException.class,
@@ -199,9 +207,9 @@ class AuthServiceTest {
         DuplicateCheckResponse response = authService.checkDuplicate(DuplicateType.EMAIL, "user@example.com");
 
         // then
-        assertEquals(DuplicateType.EMAIL, response.type());
-        assertEquals("user@example.com", response.value());
-        assertTrue(response.available());
+        assertEquals(DuplicateType.EMAIL, response.type);
+        assertEquals("user@example.com", response.value);
+        assertTrue(response.available);
     }
 
     @Test
@@ -214,7 +222,7 @@ class AuthServiceTest {
         DuplicateCheckResponse response = authService.checkDuplicate(DuplicateType.EMAIL, "user@example.com");
 
         // then
-        assertFalse(response.available());
+        assertFalse(response.available);
     }
 
     @Test
