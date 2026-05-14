@@ -1,16 +1,18 @@
-package com.team10.backend.domain.order.dto.search;
+package com.team10.backend.domain.order.dto.search
 
-import com.team10.backend.domain.order.entity.OrderDelivery;
+import com.team10.backend.domain.order.entity.OrderDelivery
 
-// 배송 정보를 담는 내부 DTO
-record OrderDeliveryDto(
-        String deliveryAddress,
-        String trackingNumber
+// 배송 정보를 담는 내부 DTO,internal이 있었는데 생략
+data class OrderDeliveryDto(
+    val deliveryAddress: String,
+    val trackingNumber: String? // 아직 발송 전일 수 있으므로 nullable 유지
 ) {
-    public static OrderDeliveryDto from(OrderDelivery delivery) {
-        return new OrderDeliveryDto(
-                delivery.getDelivery_address(),
-                delivery.getTracking_number()
-        );
+    companion object {
+        fun from(delivery: OrderDelivery): OrderDeliveryDto {
+            return OrderDeliveryDto(
+                deliveryAddress = delivery.delivery_address,
+                trackingNumber = delivery.tracking_number
+            )
+        }
     }
 }
