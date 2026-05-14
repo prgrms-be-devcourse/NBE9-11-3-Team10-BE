@@ -146,7 +146,7 @@ public class ProductService {
             throw new BusinessException(ErrorCode.PRODUCT_ALREADY_INACTIVE);
         }
 
-        product.updateStock(request.stock());
+        product.updateStock(request.stock);
 
         return ProductStockResponse.of(product.getId(), product.getStock());
     }

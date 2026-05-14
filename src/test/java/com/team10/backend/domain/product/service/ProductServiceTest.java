@@ -406,9 +406,9 @@ class ProductServiceTest {
 
         ProductInactiveResponse response = productService.inactive(1L, savedProduct.getId());
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.status()).isEqualTo(ProductStatus.INACTIVE);
-        assertThat(response.message()).isEqualTo("상품이 삭제되었습니다.");
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.status).isEqualTo(ProductStatus.INACTIVE);
+        assertThat(response.message).isEqualTo("상품이 삭제되었습니다.");
 
         Product product = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertThat(product.getStatus()).isEqualTo(ProductStatus.INACTIVE);
@@ -483,9 +483,9 @@ class ProductServiceTest {
 
         ProductStockResponse response = productService.updateStock(1L, savedProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.stock()).isEqualTo(30);
-        assertThat(response.message()).isEqualTo("상품 재고가 수정되었습니다.");
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.stock).isEqualTo(30);
+        assertThat(response.message).isEqualTo("상품 재고가 수정되었습니다.");
 
         Product product = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertThat(product.getStock()).isEqualTo(30);
@@ -601,8 +601,8 @@ class ProductServiceTest {
 
         ProductStockResponse response = productService.updateStock(1L, savedProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.stock()).isEqualTo(0);
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.stock).isEqualTo(0);
 
         Product product = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertThat(product.getStock()).isEqualTo(0);
@@ -628,8 +628,8 @@ class ProductServiceTest {
 
         ProductStockResponse response = productService.updateStock(1L, soldOutProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(soldOutProduct.getId());
-        assertThat(response.stock()).isEqualTo(5);
+        assertThat(response.productId).isEqualTo(soldOutProduct.getId());
+        assertThat(response.stock).isEqualTo(5);
 
         Product product = productRepository.findById(soldOutProduct.getId()).orElseThrow();
         assertThat(product.getStock()).isEqualTo(5);
