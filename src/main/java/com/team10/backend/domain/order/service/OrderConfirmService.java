@@ -60,7 +60,7 @@ public class OrderConfirmService {
         // 시크릿 키 인증 헤더 설정
         String encodedKey = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
 
-        Order order = orderRepository.findByOrderNumber(request.orderId())
+        Order order = orderRepository.findByOrderNumber(request.orderId)
                 .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
 
         //수정
@@ -126,7 +126,7 @@ public class OrderConfirmService {
     @Recover
     public TossConfirmResponse recover(ResourceAccessException e, ConfirmRequest request, String testCode) {
         System.err.printf("[ERROR] 결제 승인 최종 실패 - 주문번호: %s, 에러: %s%n",
-                request.orderId(), e.getMessage());
+                request.orderId, e.getMessage());
         //todo 관리자에게 알람
         // 네트워크 장애 시: "결제 확인 중" 상태로 변경하거나 관리자 알림
         throw new BusinessException(ErrorCode.NETWORK_ERROR_FINAL_FAILED);
