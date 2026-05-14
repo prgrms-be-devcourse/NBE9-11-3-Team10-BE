@@ -1,16 +1,21 @@
-package com.team10.backend.domain.order.dto.search.buyer;
+package com.team10.backend.domain.order.dto.search.buyer
 
-import com.team10.backend.domain.user.entity.User;
+import com.team10.backend.domain.user.entity.User
 
-import java.util.List;
 /**/
-public record OrderListResponse(
-        Long userId,                // 주문자 식별자
-        String userName,            // 주문자 이름 (필요 시)
-        List<OrderSummaryResponse> orders
+data class OrderListResponse(
+    @JvmField val userId: Long,
+    @JvmField val userName: String,
+    @JvmField val orders: List<OrderSummaryResponse> // MutableList와 ? 제거
 ) {
-    public static OrderListResponse of(User user, List<OrderSummaryResponse> orders) {
-        return new OrderListResponse(user.getId(), user.getName(), orders);
+    companion object {
+        @JvmStatic
+        fun of(user: User, orders: List<OrderSummaryResponse>): OrderListResponse {
+            return OrderListResponse(
+                userId = user.id,   // get 메서드 대신 프로퍼티 접근
+                userName = user.name,
+                orders = orders
+            )
+        }
     }
-
 }
