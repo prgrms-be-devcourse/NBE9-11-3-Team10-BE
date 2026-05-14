@@ -92,8 +92,8 @@ public class RefreshTokenServiceTest {
         RefreshResult result = refreshTokenService.refresh("old-token");
 
         // then
-        assertEquals("new-access-token", result.accessToken());
-        assertNotNull(result.refreshToken());
+        assertEquals("new-access-token", result.accessToken);
+        assertNotNull(result.refreshToken);
 
         then(refreshToken).should().revoke();
         then(refreshTokenRepository).should(times(1)).save(any(RefreshToken.class));
