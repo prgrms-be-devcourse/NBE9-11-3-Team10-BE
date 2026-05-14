@@ -1,21 +1,19 @@
-package com.team10.backend.domain.auth.dto;
+package com.team10.backend.domain.auth.dto
 
-import com.team10.backend.domain.user.entity.User;
+import com.team10.backend.domain.user.entity.User
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-public record AuthRegisterResponse(
-        Long id,
-        String email,
-        LocalDateTime createdAt
+data class AuthRegisterResponse(
+    val id: Long,
+    @JvmField val email: String,
+    val createdAt: LocalDateTime
 ) {
-
-    public static AuthRegisterResponse from(User user) {
-        return new AuthRegisterResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getCreatedAt()
-        );
+    companion object {
+        @JvmStatic
+        fun from(user: User) = AuthRegisterResponse(
+                user.id,
+                user.email,
+                user.createdAt
+        )
     }
-
 }

@@ -22,7 +22,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,6 +76,9 @@ class AuthServiceTest {
         given(passwordEncoder.encode(request.password)).willReturn("encodedPassword");
 
         User user = User.create(request, "encodedPassword", request.role);
+        ReflectionTestUtils.setField(user, "id", 1L);
+        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now());
         given(userRepository.save(any(User.class))).willReturn(user);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -94,7 +99,7 @@ class AuthServiceTest {
         assertEquals(Role.BUYER, savedUser.getRole());
         assertNull(savedUser.getSellerInfo());
 
-        assertEquals(request.email, response.email());
+        assertEquals(request.email, response.email);
     }
 
     @Test
@@ -116,6 +121,9 @@ class AuthServiceTest {
         given(passwordEncoder.encode(request.password)).willReturn("encodedPassword");
 
         User user = User.create(request, "encodedPassword", request.role);
+        ReflectionTestUtils.setField(user, "id", 1L);
+        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now());
         given(userRepository.save(any(User.class))).willReturn(user);
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
