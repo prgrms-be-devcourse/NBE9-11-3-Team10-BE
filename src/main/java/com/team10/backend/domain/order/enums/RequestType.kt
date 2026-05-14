@@ -1,6 +1,6 @@
-package com.team10.backend.domain.order.enums;
+package com.team10.backend.domain.order.enums
 
-public enum RequestType {
+enum class RequestType {
     PAYMENT,
     CANCEL
 }
