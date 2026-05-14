@@ -77,10 +77,10 @@ public class AuthService {
     }
 
     private User authenticate(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByEmail(request.email)
                 .orElseThrow(() -> new BusinessException(LOGIN_FAILED));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.password, user.getPassword())) {
             throw new BusinessException(LOGIN_FAILED);
         }
 

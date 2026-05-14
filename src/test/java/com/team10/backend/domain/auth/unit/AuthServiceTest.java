@@ -232,14 +232,14 @@ class AuthServiceTest {
         LoginRequest request = new LoginRequest("user@example.com", "password");
 
         User user = User.builder()
-                        .email(request.email())
+                        .email(request.email)
                         .password("encodedPassword")
                         .nickname("길동이")
                         .role(Role.BUYER)
                         .build();
 
-        given(this.userRepository.findByEmail(request.email())).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(request.password(), user.getPassword()))
+        given(this.userRepository.findByEmail(request.email)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.password, user.getPassword()))
                             .willReturn(true);
         given(tokenProvider.generateToken(user.getId(), user.getRole())).willReturn("test-access-token");
         given(refreshTokenService.createRefreshToken(user)).willReturn("test-refresh-token");
@@ -260,14 +260,14 @@ class AuthServiceTest {
         LoginRequest request = new LoginRequest("user@example.com", "password");
 
         User user = User.builder()
-                .email(request.email())
+                .email(request.email)
                 .password("encodedPassword")
                 .nickname("길동이")
                 .role(Role.BUYER)
                 .build();
 
-        given(this.userRepository.findByEmail(request.email())).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(false);
+        given(this.userRepository.findByEmail(request.email)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.password, user.getPassword())).willReturn(false);
 
         // when & then
         BusinessException ex = assertThrows(BusinessException.class,
