@@ -1,9 +1,9 @@
-package com.team10.backend.domain.auth.dto;
+package com.team10.backend.domain.auth.dto
 
-import com.team10.backend.domain.user.enums.DuplicateType;
+import com.team10.backend.domain.user.enums.DuplicateType
 
-public record DuplicateCheckResponse(
-        DuplicateType type,
-        String value,
-        boolean available
-) {}
+data class DuplicateCheckResponse(
+    @JvmField val type: DuplicateType,
+    @JvmField val value: String,
+    @JvmField val available: Boolean
+)

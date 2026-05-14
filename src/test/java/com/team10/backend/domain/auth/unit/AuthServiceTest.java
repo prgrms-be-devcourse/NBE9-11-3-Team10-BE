@@ -207,9 +207,9 @@ class AuthServiceTest {
         DuplicateCheckResponse response = authService.checkDuplicate(DuplicateType.EMAIL, "user@example.com");
 
         // then
-        assertEquals(DuplicateType.EMAIL, response.type());
-        assertEquals("user@example.com", response.value());
-        assertTrue(response.available());
+        assertEquals(DuplicateType.EMAIL, response.type);
+        assertEquals("user@example.com", response.value);
+        assertTrue(response.available);
     }
 
     @Test
@@ -222,7 +222,7 @@ class AuthServiceTest {
         DuplicateCheckResponse response = authService.checkDuplicate(DuplicateType.EMAIL, "user@example.com");
 
         // then
-        assertFalse(response.available());
+        assertFalse(response.available);
     }
 
     @Test
