@@ -1,37 +1,35 @@
-package com.team10.backend.domain.user.dto;
+package com.team10.backend.domain.user.dto
 
-import com.team10.backend.domain.user.entity.User;
+import com.team10.backend.domain.user.entity.User
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-public record SellerResponse(
-    Long id,
-    String imageUrl,
-    String email,
-    String name,
-    String nickname,
-    String phoneNumber,
-    String address,
-    String bio,
-    String businessNumber,
-    LocalDateTime createdAt,
-    LocalDateTime updatedAt
+data class SellerResponse(
+    val id: Long,
+    val imageUrl: String?,
+    val email: String,
+    @JvmField val name: String,
+    @JvmField val nickname: String,
+    val phoneNumber: String,
+    @JvmField val address: String,
+    @JvmField val bio: String?,
+    @JvmField val businessNumber: String?,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime
 ) {
-
-    public static SellerResponse from(User user) {
-        return new SellerResponse(
-                user.getId(),
-                user.getImageUrl(),
-                user.getEmail(),
-                user.getName(),
-                user.getNickname(),
-                user.getPhoneNumber(),
-                user.getAddress(),
-                user.getSellerInfo().getBio(),
-                user.getSellerInfo().getBusinessNumber(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
+    companion object {
+        @JvmStatic
+        fun from(user: User) = SellerResponse(
+                user.id,
+                user.imageUrl,
+                user.email,
+                user.name,
+                user.nickname,
+                user.phoneNumber,
+                user.address,
+                user.sellerInfo.bio,
+                user.sellerInfo.businessNumber,
+                user.createdAt,
+                user.updatedAt
+        )
     }
-
 }

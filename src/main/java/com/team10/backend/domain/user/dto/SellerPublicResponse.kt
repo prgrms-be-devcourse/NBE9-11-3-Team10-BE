@@ -1,20 +1,22 @@
-package com.team10.backend.domain.user.dto;
+package com.team10.backend.domain.user.dto
 
-import com.team10.backend.domain.user.entity.User;
+import com.team10.backend.domain.user.entity.User
 
-public record SellerPublicResponse(
-        String imageUrl,
-        String name,
-        String nickname,
-        String bio
+data class SellerPublicResponse(
+    val imageUrl: String?,
+    val name: String,
+    val nickname: String,
+    val bio: String
 ) {
-
-    public static SellerPublicResponse from(User user) {
-        return new SellerPublicResponse(
-                user.getImageUrl(),
-                user.getName(),
-                user.getNickname(),
-                user.getSellerInfo().getBio()
-        );
+    companion object {
+        @JvmStatic
+        fun from(user: User): SellerPublicResponse {
+            return SellerPublicResponse(
+                user.imageUrl,
+                user.name,
+                user.nickname,
+                user.sellerInfo.bio
+            )
+        }
     }
 }

@@ -16,6 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.team10.backend.global.exception.ErrorCode.NOT_SELLER;
@@ -60,6 +63,9 @@ public class UserServiceTest {
     void getSellerProfile_success() {
         // given
         User user = UserTestFixture.createSeller();
+        ReflectionTestUtils.setField(user, "id", 1L);
+        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now());
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
@@ -68,7 +74,7 @@ public class UserServiceTest {
 
         // then
         assertNotNull(response);
-        assertEquals(user.getName(), response.name());
+        assertEquals(user.getName(), response.name);
     }
 
     @Test
@@ -147,6 +153,9 @@ public class UserServiceTest {
     void updateMySellerProfile_success() {
         // given
         User user = UserTestFixture.createSeller();
+        ReflectionTestUtils.setField(user, "id", 1L);
+        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now());
 
         SellerUpdateRequest request = new SellerUpdateRequest(
                 "새로운판매자",
@@ -163,10 +172,10 @@ public class UserServiceTest {
 
         // then
         assertNotNull(response);
-        assertEquals("새로운판매자", response.nickname());
-        assertEquals("대구", response.address());
-        assertEquals("새로운 인사말입니다.", response.bio());
-        assertEquals("999-999-99999", response.businessNumber());
+        assertEquals("새로운판매자", response.nickname);
+        assertEquals("대구", response.address);
+        assertEquals("새로운 인사말입니다.", response.bio);
+        assertEquals("999-999-99999", response.businessNumber);
     }
 
     @Test
