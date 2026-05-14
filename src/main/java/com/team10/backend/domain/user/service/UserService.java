@@ -48,9 +48,9 @@ public class UserService {
     public UserResponse updateMyUserProfile(Long id, UserUpdateRequest request) {
         User user = getUserEntity(id);
         user.updateUserInfo(
-                request.nickname(),
-                request.phoneNumber(),
-                request.address()
+                request.nickname,
+                request.phoneNumber,
+                request.address
         );
 
         return UserResponse.from(user);
@@ -63,15 +63,15 @@ public class UserService {
         validateSellerRole(user);
 
         user.updateUserInfo(
-                request.nickname(),
-                request.phoneNumber(),
-                request.address()
+                request.nickname,
+                request.phoneNumber,
+                request.address
         );
 
         SellerInfo sellerInfo = user.getSellerInfo();
         sellerInfo.updateSellerInfo(
-                request.bio(),
-                request.businessNumber()
+                request.bio,
+                request.businessNumber
         );
 
         return SellerResponse.from(user);
