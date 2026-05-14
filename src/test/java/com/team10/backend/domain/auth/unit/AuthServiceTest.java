@@ -249,9 +249,9 @@ class AuthServiceTest {
         LoginResult result = authService.login(request);
 
         // then
-        assertEquals(user.getEmail(), result.response().email);
-        assertEquals("test-access-token", result.accessToken());
-        assertEquals("test-refresh-token", result.refreshToken());
+        assertEquals(user.getEmail(), result.response.email);
+        assertEquals("test-access-token", result.accessToken);
+        assertEquals("test-refresh-token", result.refreshToken);
     }
 
     @Test
