@@ -9,10 +9,11 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface PaymentRepository extends JpaRepository<Payment,Long> {
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByOrderNumber(String s);
 
     // 1. 해당 주문의 가장 최신 시도 기록 조회
@@ -26,4 +27,21 @@ public interface PaymentRepository extends JpaRepository<Payment,Long> {
     List<Payment> findAllByOrderOrderByCreatedAtAsc(Order order);
 
     Optional<Payment> findByOrderNumberAndType(String orderNumber, RequestType type);
+
+    // 미정산 결제 건 탐색용 (배치용)
+    @Query("""
+                SELECT p FROM Payment p
+                WHERE p.status = 'PAID'
+                AND p.order.user.id = :sellerId
+                AND p.createdAt BETWEEN :startDate AND :endDate
+                AND NOT EXISTS (
+                    SELECT 1 FROM SettlementDetail sd 
+                    WHERE sd.payment.id = p.id
+                )
+            """)
+    List<Payment> findUnsettledPaymentsBySellerAndPeriod(
+            Long sellerId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
 }
