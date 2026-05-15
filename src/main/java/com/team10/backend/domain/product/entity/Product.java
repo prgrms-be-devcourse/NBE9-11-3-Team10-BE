@@ -7,13 +7,13 @@ import com.team10.backend.global.entity.BaseEntity;
 import com.team10.backend.global.exception.BusinessException;
 import com.team10.backend.global.exception.ErrorCode;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "products")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product extends BaseEntity {
+
+    protected Product() {
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

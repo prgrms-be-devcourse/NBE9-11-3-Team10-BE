@@ -102,14 +102,14 @@ class ProductServiceTest {
 
         ProductDetailResponse response = productService.create(1L, request);
 
-        assertThat(response.productId()).isNotNull();
-        assertThat(response.productName()).isEqualTo("ABC");
-        assertThat(response.description()).isEqualTo("책 설명입니다.");
-        assertThat(response.price()).isEqualTo(10000);
-        assertThat(response.stock()).isEqualTo(100);
-        assertThat(response.type()).isEqualTo(ProductType.BOOK);
-        assertThat(response.imageUrl()).isNull();
-        assertThat(response.status()).isEqualTo(ProductStatus.SELLING);
+        assertThat(response.productId).isNotNull();
+        assertThat(response.productName).isEqualTo("ABC");
+        assertThat(response.description).isEqualTo("책 설명입니다.");
+        assertThat(response.price).isEqualTo(10000);
+        assertThat(response.stock).isEqualTo(100);
+        assertThat(response.type).isEqualTo(ProductType.BOOK);
+        assertThat(response.imageUrl).isNull();
+        assertThat(response.status).isEqualTo(ProductStatus.SELLING);
         assertThat(productRepository.count()).isEqualTo(1);
     }
 
@@ -127,10 +127,10 @@ class ProductServiceTest {
 
         ProductDetailResponse response = productService.create(1L, request);
 
-        assertThat(response.productName()).isEqualTo("이미지 상품");
-        assertThat(response.imageUrl()).isEqualTo("https://example.com/product.jpg");
+        assertThat(response.productName).isEqualTo("이미지 상품");
+        assertThat(response.imageUrl).isEqualTo("https://example.com/product.jpg");
 
-        Product product = productRepository.findById(response.productId()).orElseThrow();
+        Product product = productRepository.findById(response.productId).orElseThrow();
         assertThat(product.getImageUrl()).isEqualTo("https://example.com/product.jpg");
     }
 
@@ -144,12 +144,12 @@ class ProductServiceTest {
 
         ProductPageResponse response = productService.list(0, 10, null, null, null);
 
-        assertThat(response.content()).hasSize(2);
-        assertThat(response.content().get(0).nickname()).isEqualTo("seller1");
-        assertThat(response.page()).isEqualTo(1);
-        assertThat(response.size()).isEqualTo(10);
-        assertThat(response.totalElements()).isEqualTo(2);
-        assertThat(response.totalPages()).isEqualTo(1);
+        assertThat(response.content).hasSize(2);
+        assertThat(response.content.get(0).nickname).isEqualTo("seller1");
+        assertThat(response.page).isEqualTo(1);
+        assertThat(response.size).isEqualTo(10);
+        assertThat(response.totalElements).isEqualTo(2);
+        assertThat(response.totalPages).isEqualTo(1);
     }
 
     @Test
@@ -162,10 +162,10 @@ class ProductServiceTest {
 
         ProductPageResponse response = productService.list(0, 10, ProductType.BOOK, null, null);
 
-        assertThat(response.content()).hasSize(1);
-        assertThat(response.content().get(0).nickname()).isEqualTo("seller1");
-        assertThat(response.content().get(0).productName()).isEqualTo("책1");
-        assertThat(response.content().get(0).type()).isEqualTo(ProductType.BOOK);
+        assertThat(response.content).hasSize(1);
+        assertThat(response.content.get(0).nickname).isEqualTo("seller1");
+        assertThat(response.content.get(0).productName).isEqualTo("책1");
+        assertThat(response.content.get(0).type).isEqualTo(ProductType.BOOK);
     }
 
     @Test
@@ -181,10 +181,10 @@ class ProductServiceTest {
 
         ProductPageResponse response = productService.list(0, 10, null, ProductStatus.SELLING, null);
 
-        assertThat(response.content()).hasSize(1);
-        assertThat(response.content().get(0).nickname()).isEqualTo("seller1");
-        assertThat(response.content().get(0).productName()).isEqualTo("책1");
-        assertThat(response.content().get(0).status()).isEqualTo(ProductStatus.SELLING);
+        assertThat(response.content).hasSize(1);
+        assertThat(response.content.get(0).nickname).isEqualTo("seller1");
+        assertThat(response.content.get(0).productName).isEqualTo("책1");
+        assertThat(response.content.get(0).status).isEqualTo(ProductStatus.SELLING);
     }
 
     @Test
@@ -202,11 +202,11 @@ class ProductServiceTest {
 
         ProductPageResponse response = productService.list(0, 10, ProductType.BOOK, ProductStatus.SELLING, null);
 
-        assertThat(response.content()).hasSize(1);
-        assertThat(response.content().get(0).nickname()).isEqualTo("seller1");
-        assertThat(response.content().get(0).productName()).isEqualTo("책1");
-        assertThat(response.content().get(0).type()).isEqualTo(ProductType.BOOK);
-        assertThat(response.content().get(0).status()).isEqualTo(ProductStatus.SELLING);
+        assertThat(response.content).hasSize(1);
+        assertThat(response.content.get(0).nickname).isEqualTo("seller1");
+        assertThat(response.content.get(0).productName).isEqualTo("책1");
+        assertThat(response.content.get(0).type).isEqualTo(ProductType.BOOK);
+        assertThat(response.content.get(0).status).isEqualTo(ProductStatus.SELLING);
     }
 
     @Test
@@ -226,15 +226,15 @@ class ProductServiceTest {
 
         ProductDetailResponse response = productService.detail(savedProduct.getId());
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.productName()).isEqualTo("ABC");
-        assertThat(response.description()).isEqualTo("책 설명입니다.");
-        assertThat(response.nickname()).isEqualTo("seller1");
-        assertThat(response.price()).isEqualTo(10000);
-        assertThat(response.stock()).isEqualTo(100);
-        assertThat(response.type()).isEqualTo(ProductType.BOOK);
-        assertThat(response.imageUrl()).isNull();
-        assertThat(response.status()).isEqualTo(ProductStatus.SELLING);
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.productName).isEqualTo("ABC");
+        assertThat(response.description).isEqualTo("책 설명입니다.");
+        assertThat(response.nickname).isEqualTo("seller1");
+        assertThat(response.price).isEqualTo(10000);
+        assertThat(response.stock).isEqualTo(100);
+        assertThat(response.type).isEqualTo(ProductType.BOOK);
+        assertThat(response.imageUrl).isNull();
+        assertThat(response.status).isEqualTo(ProductStatus.SELLING);
     }
 
     @Test
@@ -271,13 +271,13 @@ class ProductServiceTest {
 
         ProductDetailResponse response = productService.update(1L, savedProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.productName()).isEqualTo("수정된 상품명");
-        assertThat(response.description()).isEqualTo("수정된 설명");
-        assertThat(response.price()).isEqualTo(12000);
-        assertThat(response.imageUrl()).isEqualTo("https://example.com/new.jpg");
-        assertThat(response.type()).isEqualTo(ProductType.EBOOK);
-        assertThat(response.status()).isEqualTo(ProductStatus.SOLD_OUT);
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.productName).isEqualTo("수정된 상품명");
+        assertThat(response.description).isEqualTo("수정된 설명");
+        assertThat(response.price).isEqualTo(12000);
+        assertThat(response.imageUrl).isEqualTo("https://example.com/new.jpg");
+        assertThat(response.type).isEqualTo(ProductType.EBOOK);
+        assertThat(response.status).isEqualTo(ProductStatus.SOLD_OUT);
         verify(imageUploadService).deleteIfManaged("https://example.com/old.jpg");
     }
 
@@ -307,8 +307,8 @@ class ProductServiceTest {
 
         ProductDetailResponse response = productService.update(1L, savedProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.imageUrl()).isNull();
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.imageUrl).isNull();
         verify(imageUploadService).deleteIfManaged("https://example.com/old.jpg");
     }
 
@@ -338,8 +338,8 @@ class ProductServiceTest {
 
         ProductDetailResponse response = productService.update(1L, savedProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.imageUrl()).isEqualTo("https://example.com/same.jpg");
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.imageUrl).isEqualTo("https://example.com/same.jpg");
         verify(imageUploadService, never()).deleteIfManaged("https://example.com/same.jpg");
     }
 
@@ -406,9 +406,9 @@ class ProductServiceTest {
 
         ProductInactiveResponse response = productService.inactive(1L, savedProduct.getId());
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.status()).isEqualTo(ProductStatus.INACTIVE);
-        assertThat(response.message()).isEqualTo("상품이 삭제되었습니다.");
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.status).isEqualTo(ProductStatus.INACTIVE);
+        assertThat(response.message).isEqualTo("상품이 삭제되었습니다.");
 
         Product product = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertThat(product.getStatus()).isEqualTo(ProductStatus.INACTIVE);
@@ -483,9 +483,9 @@ class ProductServiceTest {
 
         ProductStockResponse response = productService.updateStock(1L, savedProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.stock()).isEqualTo(30);
-        assertThat(response.message()).isEqualTo("상품 재고가 수정되었습니다.");
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.stock).isEqualTo(30);
+        assertThat(response.message).isEqualTo("상품 재고가 수정되었습니다.");
 
         Product product = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertThat(product.getStock()).isEqualTo(30);
@@ -576,9 +576,9 @@ class ProductServiceTest {
 
         ProductPageResponse response = productService.list(0, 10, null, null, seller.getId());
 
-        assertThat(response.content()).isNotEmpty();
-        assertThat(response.content())
-                .extracting(ProductListResponse::sellerId)
+        assertThat(response.content).isNotEmpty();
+        assertThat(response.content)
+                .extracting(product -> product.sellerId)
                 .containsOnly(seller.getId());
     }
 
@@ -601,8 +601,8 @@ class ProductServiceTest {
 
         ProductStockResponse response = productService.updateStock(1L, savedProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(savedProduct.getId());
-        assertThat(response.stock()).isEqualTo(0);
+        assertThat(response.productId).isEqualTo(savedProduct.getId());
+        assertThat(response.stock).isEqualTo(0);
 
         Product product = productRepository.findById(savedProduct.getId()).orElseThrow();
         assertThat(product.getStock()).isEqualTo(0);
@@ -628,8 +628,8 @@ class ProductServiceTest {
 
         ProductStockResponse response = productService.updateStock(1L, soldOutProduct.getId(), request);
 
-        assertThat(response.productId()).isEqualTo(soldOutProduct.getId());
-        assertThat(response.stock()).isEqualTo(5);
+        assertThat(response.productId).isEqualTo(soldOutProduct.getId());
+        assertThat(response.stock).isEqualTo(5);
 
         Product product = productRepository.findById(soldOutProduct.getId()).orElseThrow();
         assertThat(product.getStock()).isEqualTo(5);
