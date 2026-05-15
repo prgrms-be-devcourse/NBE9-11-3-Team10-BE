@@ -1,96 +1,88 @@
-package com.team10.backend.domain.auth.service;
+package com.team10.backend.domain.auth.service
 
-import com.team10.backend.domain.auth.dto.*;
-import com.team10.backend.domain.user.entity.SellerInfo;
-import com.team10.backend.domain.user.entity.User;
-import com.team10.backend.domain.user.enums.DuplicateType;
-import com.team10.backend.domain.user.enums.Role;
-import com.team10.backend.domain.user.repository.UserRepository;
-import com.team10.backend.global.exception.BusinessException;
-import com.team10.backend.global.exception.ErrorCode;
-import com.team10.backend.global.security.TokenProvider;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import static com.team10.backend.global.exception.ErrorCode.INVALID_INPUT;
-import static com.team10.backend.global.exception.ErrorCode.LOGIN_FAILED;
+import com.team10.backend.domain.auth.dto.AuthRegisterRequest
+import com.team10.backend.domain.auth.dto.AuthRegisterResponse
+import com.team10.backend.domain.auth.dto.DuplicateCheckResponse
+import com.team10.backend.domain.auth.dto.LoginRequest
+import com.team10.backend.domain.auth.dto.LoginResponse
+import com.team10.backend.domain.auth.dto.LoginResult
+import com.team10.backend.domain.user.entity.SellerInfo
+import com.team10.backend.domain.user.entity.User
+import com.team10.backend.domain.user.enums.DuplicateType
+import com.team10.backend.domain.user.enums.Role
+import com.team10.backend.domain.user.repository.UserRepository
+import com.team10.backend.global.exception.BusinessException
+import com.team10.backend.global.exception.ErrorCode
+import com.team10.backend.global.security.TokenProvider
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-public class AuthService {
-
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final TokenProvider tokenProvider;
-    private final RefreshTokenService refreshTokenService;
-
+class AuthService(
+    private val userRepository: UserRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val tokenProvider: TokenProvider,
+    private val refreshTokenService: RefreshTokenService
+) {
     @Transactional
-    public AuthRegisterResponse register(AuthRegisterRequest request) {
-        validateDuplicateUser(request);
+    fun register(request: AuthRegisterRequest): AuthRegisterResponse {
+        validateDuplicateUser(request)
 
-        String encodedPassword = passwordEncoder.encode(request.password);
-
-        Role role = request.role;
-
-        User user = User.create(request, encodedPassword, role);
+        val encodedPassword = passwordEncoder.encode(request.password)
+        val role = request.role
+        val user = User.create(request, encodedPassword, role)
 
         if (role == Role.SELLER) {
-            SellerInfo sellerInfo = new SellerInfo();
-            user.attachSellerInfo(sellerInfo);
+            user.attachSellerInfo(SellerInfo())
         }
 
-        User savedUser = userRepository.save(user);
-
-        return AuthRegisterResponse.from(savedUser);
+        return AuthRegisterResponse.from(userRepository.save(user))
     }
 
-    private void validateDuplicateUser(AuthRegisterRequest request) {
+    private fun validateDuplicateUser(request: AuthRegisterRequest) {
         if (userRepository.existsByEmail(request.email)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+            throw BusinessException(ErrorCode.DUPLICATE_EMAIL)
         }
         if (userRepository.existsByNickname(request.nickname)) {
-            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+            throw BusinessException(ErrorCode.DUPLICATE_NICKNAME)
         }
     }
 
     @Transactional(readOnly = true)
-    public DuplicateCheckResponse checkDuplicate(DuplicateType type, String value) {
-        if (!StringUtils.hasText(value)) {
-            throw new BusinessException(INVALID_INPUT);
-        }
-        value = value.trim().toLowerCase();
-        boolean available = switch (type) {
-            case EMAIL -> !userRepository.existsByEmail(value);
-            case NICKNAME -> !userRepository.existsByNickname(value);
-        };
-        return new DuplicateCheckResponse(type, value, available);
-    }
+    fun checkDuplicate(type: DuplicateType, value: String): DuplicateCheckResponse {
+        val value = value.trim().lowercase()
 
-    public LoginResult login(LoginRequest request) {
-        User user = authenticate(request);
-        String accessToken = tokenProvider.generateToken(user.getId(), user.getRole());
-        String refreshToken = refreshTokenService.createRefreshToken(user);
-
-        LoginResponse response = LoginResponse.from(user);
-        return new LoginResult(response, accessToken, refreshToken);
-    }
-
-    private User authenticate(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email)
-                .orElseThrow(() -> new BusinessException(LOGIN_FAILED));
-
-        if (!passwordEncoder.matches(request.password, user.getPassword())) {
-            throw new BusinessException(LOGIN_FAILED);
+        if (value.isBlank()) {
+            throw BusinessException(ErrorCode.INVALID_INPUT)
         }
 
-        return user;
+        val available = when (type) {
+            DuplicateType.EMAIL -> !userRepository.existsByEmail(value)
+            DuplicateType.NICKNAME -> !userRepository.existsByNickname(value)
+        }
+
+        return DuplicateCheckResponse(type, value, available)
     }
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenProvider tokenProvider, RefreshTokenService refreshTokenService) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.tokenProvider = tokenProvider;
-        this.refreshTokenService = refreshTokenService;
+    fun login(request: LoginRequest): LoginResult {
+        val user = authenticate(request)
+
+        val accessToken = tokenProvider.generateToken(user.id, user.role)
+        val refreshToken = refreshTokenService.createRefreshToken(user)
+        val response = LoginResponse.from(user)
+
+        return LoginResult(response, accessToken, refreshToken)
+    }
+
+    private fun authenticate(request: LoginRequest): User {
+        val user = userRepository.findByEmail(request.email)
+            .orElseThrow { BusinessException(ErrorCode.LOGIN_FAILED) }
+
+        if (!passwordEncoder.matches(request.password,user.password)) {
+            throw BusinessException(ErrorCode.LOGIN_FAILED)
+        }
+
+        return user
     }
 }
