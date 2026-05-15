@@ -12,8 +12,8 @@ import jakarta.persistence.*
         Index(name = "idx_settlement_detail_seller_date", columnList = "seller_id, created_at")
     ]
 )
-// 정산 명세는 감사/회계 목적의 불변 데이터이므로 소프트 삭제(@SQLDelete) 는 제거하는 것을 권장합니다.
-class SettlementDetail @JvmOverloads constructor(
+
+class SettlementDetail (
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "settlement_id")
     var settlement: Settlement? = null,
