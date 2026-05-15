@@ -1,4 +1,4 @@
-package com.team10.backend.fixture.domain.settlement.unit.service
+package com.team10.backend.domain.settlement.unit.service
 
 import com.team10.backend.domain.order.entity.Payment
 import com.team10.backend.domain.settlement.service.SettlementReconciliationService
