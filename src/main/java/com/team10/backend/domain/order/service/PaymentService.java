@@ -30,8 +30,10 @@ public class PaymentService {
         //todo 유저 검증하는 부분, 해당 유저가 해당 오더 넘버를 가지고 있는게 맞는지
         // 1. 비즈니스 검증: DB의 금액과 요청 금액 비교 , 주문 생성시에
 //        log.info("조회 시도 - request.orderId: [{}]", request.orderId());
-        Payment payment = paymentRepository.findByOrderNumber(request.orderId)
-                .orElseThrow(() -> new BusinessException(PAYMENT_NOT_FOUND));
+        Payment payment = paymentRepository.findByOrderNumber(request.orderId);
+        if(payment == null){
+            throw new BusinessException(PAYMENT_NOT_FOUND);
+        }
 
         Order order = orderRepository.findByOrderNumber(request.orderId);
         if (order == null) {

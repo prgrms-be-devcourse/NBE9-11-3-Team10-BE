@@ -45,10 +45,9 @@ public class PaymentStatusService {
 
         try {
             // 1. 최신 레코드 조회 uncertain의 경우에 필요.이전 결제 상태 값이 필요하다.
-            Optional<Payment> latestOpt = paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order);
+            Payment latestPayment = paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order);
 
-            if (latestOpt.isPresent()) {
-                Payment latestPayment = latestOpt.get();
+            if (latestPayment != null) {
 
                 // 비관적 락으로 해당 행 점유
                 paymentRepository.findByIdForUpdate(latestPayment.getId());
@@ -63,8 +62,8 @@ public class PaymentStatusService {
         } catch (DataIntegrityViolationException e) {
             // 동시성 이슈: 거의 동시에 두 스레드가 신규 생성(v1 등)을 시도했을 경우
 //            log.warn("결제 레코드 생성 중 경합 발생 - 최신 데이터 재조회");
-            Payment latest = paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)
-                    .orElseThrow(() -> e); // 여전히 없다면 원본 에러 던짐
+//            Payment latest = paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)
+//                    .orElseThrow(() -> e); // 여전히 없다면 원본 에러 던짐
 
 //            return handleExistingPayment(latest);
             throw new BusinessException(ALREADY_PROCESSED_PAYMENT);
@@ -123,9 +122,10 @@ public class PaymentStatusService {
     // 성공 시 DB에 결과 저장
     @Transactional
     public void finalizeRecord(Payment record, PaymentStatus status, TossConfirmResponse response) {
-        Payment payment = paymentRepository.findByIdForUpdate(record.getId())
-                .orElseThrow(() -> new BusinessException(PAYMENT_NOT_FOUND));
-
+        Payment payment = paymentRepository.findByIdForUpdate(record.getId());
+        if(payment==null){
+            throw new BusinessException(PAYMENT_NOT_FOUND);
+        }
         // 2. 이미 PAID인 경우 (웹훅이 먼저 처리한 경우) 바로 리턴
         if (payment.getStatus() == PaymentStatus.PAID) {
 //            log.info("이미 완료된 결제입니다. (Race Condition 방어)");
