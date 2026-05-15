@@ -82,6 +82,10 @@ dependencies {
     // 테스트용도 동일하게 적용
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
+
+    // DataFaker
+    implementation("net.datafaker:datafaker:2.5.4")
+    testImplementation("net.datafaker:datafaker:2.5.4")
 }
 
 kotlin {
