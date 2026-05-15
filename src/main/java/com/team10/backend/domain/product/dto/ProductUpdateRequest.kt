@@ -11,7 +11,7 @@ import org.hibernate.validator.constraints.URL
 data class ProductUpdateRequest(
         @field:NotBlank(message = "상품명은 필수입니다.")
         @field:Size(max = 30, message = "상품명은 30자 이하여야 합니다.")
-        val productName: String?,
+        val productName: String,
 
         val description: String?,
 
@@ -22,8 +22,8 @@ data class ProductUpdateRequest(
         val imageUrl: String?,
 
         @field:NotNull(message = "상품 종류는 필수입니다.")
-        val type: ProductType?,
+        val type: ProductType,
 
         @field:NotNull(message = "상품 상태는 필수입니다.")
-        val status: ProductStatus?
+        val status: ProductStatus
 )
