@@ -10,62 +10,38 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "products")
-class Product protected constructor() : BaseEntity() {
-
+class Product(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    lateinit var user: User
-        protected set
+    val user: User,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    lateinit var type: ProductType
-        protected set
+    var type: ProductType,
 
     @Column(name = "product_name", nullable = false)
-    lateinit var productName: String
-        protected set
+    var productName: String,
 
     @Column(columnDefinition = "TEXT")
-    var description: String? = null
-        protected set
+    var description: String?,
 
     @Column(nullable = false)
-    var price: Int = 0
-        protected set
+    var price: Int,
 
     @Column(nullable = false)
-    var stock: Int = 0
-        protected set
+    var stock: Int,
 
     @Column(name = "image_url")
-    var imageUrl: String? = null
-        protected set
+    var imageUrl: String?
+) : BaseEntity() {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    lateinit var status: ProductStatus
+    var status: ProductStatus = if (stock == 0) ProductStatus.SOLD_OUT else ProductStatus.SELLING
         protected set
 
-
-    constructor(
-        user: User,
-        type: ProductType,
-        productName: String,
-        description: String?,
-        price: Int,
-        stock: Int,
-        imageUrl: String?
-    ) : this() {
+    init {
         validateStock(stock)
-        this.user = user
-        this.type = type
-        this.productName = productName
-        this.description = description
-        this.price = price
-        this.stock = stock
-        this.imageUrl = imageUrl
-        this.status = if (stock == 0) ProductStatus.SOLD_OUT else ProductStatus.SELLING
     }
 
     fun update(
