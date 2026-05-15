@@ -30,17 +30,17 @@ public class PaymentService {
         //todo 유저 검증하는 부분, 해당 유저가 해당 오더 넘버를 가지고 있는게 맞는지
         // 1. 비즈니스 검증: DB의 금액과 요청 금액 비교 , 주문 생성시에
 //        log.info("조회 시도 - request.orderId: [{}]", request.orderId());
-        Payment payment = paymentRepository.findByOrderNumber(request.orderId())
+        Payment payment = paymentRepository.findByOrderNumber(request.orderId)
                 .orElseThrow(() -> new BusinessException(PAYMENT_NOT_FOUND));
 
-        Order order = orderRepository.findByOrderNumber(request.orderId())
+        Order order = orderRepository.findByOrderNumber(request.orderId)
                 .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
 
         OrderDelivery delivery = orderDeliveryRepository.findById(order.getId())
                 .orElseThrow(() -> new BusinessException(DELIVERY_NOT_FOUND));
 
         //프론트에서 금액을 위조했을 경우
-        if (payment.getTotalAmount() != request.amount()) {
+        if (payment.getTotalAmount() != request.amount) {
             throw new BusinessException(AMOUNT_MISMATCH);
         }
 
@@ -49,7 +49,7 @@ public class PaymentService {
         TossConfirmResponse response = orderConfirmService.sendConfirmRequest(request, null);
 
         // 3. 결제 성공 후 상태 변경 (후처리)
-        statusChangeAfterSuccess(payment, request.paymentKey(), order, delivery);
+        statusChangeAfterSuccess(payment, request.paymentKey, order, delivery);
 
         return response;
     }

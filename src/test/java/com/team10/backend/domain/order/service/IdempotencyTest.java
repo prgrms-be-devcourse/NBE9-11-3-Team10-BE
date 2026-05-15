@@ -311,8 +311,8 @@ public class IdempotencyTest {
         // then
         // 1. 반환된 응답값이 DB에 저장되어 있던 값과 일치하는지 확인
         assertThat(response).isNotNull();
-        assertThat(response.orderId()).isEqualTo(orderId);
-        assertThat(response.status()).isEqualTo("DONE");
+        assertThat(response.orderId).isEqualTo(orderId);
+        assertThat(response.status).isEqualTo("DONE");
 
         // 2. RestTemplate의 postForEntity 메서드가 한 번도 호출되지 않았음을 검증
         verify(restTemplate, times(0))

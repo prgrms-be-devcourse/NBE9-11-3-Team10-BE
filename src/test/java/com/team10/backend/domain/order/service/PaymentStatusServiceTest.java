@@ -142,8 +142,8 @@ public class PaymentStatusServiceTest {
 
         // then
         // 1. 반환값 확인
-        assertThat(result.status()).isEqualTo("DONE");
-        assertThat(result.paymentKey()).isEqualTo(paymentKey);
+        assertThat(result.status).isEqualTo("DONE");
+        assertThat(result.paymentKey).isEqualTo(paymentKey);
 
         // 2. DB 상태 확인 (Payment2 레코드가 생성되었고 PAID인지)
         Payment savedPayment = paymentRepository.findByOrderNumber(orderId)
@@ -192,8 +192,8 @@ public class PaymentStatusServiceTest {
 
         // then
         // 1. 결과값이 DB에 저장되어 있던 값과 일치하는지 확인
-        assertThat(result.orderId()).isEqualTo(orderId);
-        assertThat(result.status()).isEqualTo("DONE");
+        assertThat(result.orderId).isEqualTo(orderId);
+        assertThat(result.status).isEqualTo("DONE");
 
         // 2. [가장 중요] RestTemplate이 한 번도 호출되지 않았는지 검증
         verify(restTemplate, times(0)).postForEntity(anyString(), any(), any());
@@ -305,7 +305,7 @@ public class PaymentStatusServiceTest {
         String capturedIdemKey = capturedEntity.getHeaders().getFirst("Idempotency-Key");
 
         // [핵심 검증] orderId와 Idempotency-Key가 기존과 동일해야 함
-        assertThat(capturedBody.orderId()).isEqualTo(originalOrderId);
+        assertThat(capturedBody.orderId).isEqualTo(originalOrderId);
         assertThat(capturedIdemKey).isEqualTo(existingIdemKey);
 
         // 2. DB 검증: 새로운 레코드가 생성되지 않고 기존 레코드가 PAID로 업데이트되어야 함
@@ -317,7 +317,7 @@ public class PaymentStatusServiceTest {
         assertThat(payments.get(0).getStatus()).isEqualTo(PaymentStatus.PAID);
         assertThat(payments.get(0).getId()).isEqualTo(980L); // 기존 그 레코드 그대로
 
-        assertThat(result.status()).isEqualTo("DONE");
+        assertThat(result.status).isEqualTo("DONE");
     }
 
     @Test

@@ -41,12 +41,12 @@ public class OrderService {
 //    private final RefundService refundService;
 
     public void validateStockAvailability(OrderCreateRequest request) {
-        for (OrderCreateRequest.OrderProductReq productReq : request.orderProducts()) {
+        for (OrderCreateRequest.OrderProductReq productReq : request.orderProducts) {
             // DB에서 상품 정보를 하나씩 조회하여 재고 확인
-            Product product = productRepository.findById(productReq.productId())
+            Product product = productRepository.findById(productReq.productId)
                     .orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND));
 
-            if (product.getStock() < productReq.quantity()) {
+            if (product.getStock() < productReq.quantity) {
                 throw new BusinessException(INSUFFICIENT_STOCK);
             }
         }
@@ -92,25 +92,25 @@ public class OrderService {
     //order-delivery 테이블에 배송지, 운송장 번호 생성
     public OrderDelivery deliveryInfo(OrderCreateRequest request) {
         return OrderDelivery.builder()
-                .delivery_address(request.deliveryAddress())
+                .delivery_address(request.deliveryAddress)
                 .tracking_number(null) // 송장 번호를 여기서 만들어야 하나?
                 .build();
     }
 
     //order-product테이블에 상품id, 상품 수량, 상품 가격을 넣는다.
     public List<OrderProducts> getOrderProductList(OrderCreateRequest request) {
-        return request.orderProducts().stream()
+        return request.orderProducts.stream()
                 .map(orderProdctReq -> {
-                    Product product = productRepository.findByIdWithPessimisticLock(orderProdctReq.productId())
-                            .orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND, "상품을 찾을 수 없습니다. ID: " + orderProdctReq.productId()));
+                    Product product = productRepository.findByIdWithPessimisticLock(orderProdctReq.productId)
+                            .orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND, "상품을 찾을 수 없습니다. ID: " + orderProdctReq.productId));
 
                     //todo 재고 감소 로직
-                    product.decreaseStock(orderProdctReq.quantity());
+                    product.decreaseStock(orderProdctReq.quantity);
 
                     //OrderProduct 테이블에 저장
                     return OrderProducts.builder()
                             .product(product)
-                            .quantity(orderProdctReq.quantity())
+                            .quantity(orderProdctReq.quantity)
                             .orderPrice(product.getPrice())
                             .build();
                 }).toList();

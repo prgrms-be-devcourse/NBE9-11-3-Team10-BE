@@ -81,15 +81,15 @@ public class OrderServiceTest {
         entityManager.clear();
 
         // Then 1: 응답 데이터 검증
-        assertThat(response.userId()).isEqualTo(1L);
-        assertThat(response.totalAmount()).isEqualTo(2100000); // 총 합계 210만 원
-        assertThat(response.orderNumber()).startsWith("ORD-");
+        assertThat(response.userId).isEqualTo(1L);
+        assertThat(response.totalAmount).isEqualTo(2100000); // 총 합계 210만 원
+        assertThat(response.orderNumber).startsWith("ORD-");
 
         // Then 2: DB 저장 상태 상세 검증 (JdbcTemplate 사용)
 
         // 2-1. Order 테이블 확인
         Map<String, Object> savedOrder = jdbcTemplate.queryForMap(
-                "SELECT * FROM orders WHERE order_number = ?", response.orderNumber());
+                "SELECT * FROM orders WHERE order_number = ?", response.orderNumber);
         assertThat(savedOrder.get("total_amount")).isEqualTo(2100000);
 
         // 2-2. OrderDelivery 테이블 확인
