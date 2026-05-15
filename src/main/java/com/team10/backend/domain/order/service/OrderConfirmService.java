@@ -60,8 +60,11 @@ public class OrderConfirmService {
         // 시크릿 키 인증 헤더 설정
         String encodedKey = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
 
-        Order order = orderRepository.findByOrderNumber(request.orderId)
-                .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
+        Order order = orderRepository.findByOrderNumber(request.orderId);
+        if (order == null) {
+            throw new BusinessException(ORDER_NOT_FOUND);
+        }
+
 
         //수정
         Payment currentPayment = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT, null);
