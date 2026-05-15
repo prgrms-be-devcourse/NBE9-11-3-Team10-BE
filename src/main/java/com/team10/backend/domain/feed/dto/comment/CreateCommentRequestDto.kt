@@ -4,9 +4,11 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
 data class CreateCommentRequestDto(
-        @JvmField val content: @NotBlank(message = "댓글 내용은 필수입니다.") @Size(
+    @field:NotBlank(message = "댓글 내용은 필수입니다.")
+    @field:Size(
         min = 1,
         max = 500,
-        message = "댓글은 1자 이상 500자 이하로 입력해주세요."
-    ) String
+        message = "댓글은 1자 이상 500자 이하로 입력해주세요.")
+    @JvmField
+    val content: String
 )

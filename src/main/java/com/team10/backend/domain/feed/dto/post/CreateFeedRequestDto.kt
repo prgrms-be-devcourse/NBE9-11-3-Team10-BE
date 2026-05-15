@@ -4,11 +4,16 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
 data class CreateFeedRequestDto(
-    @JvmField val content: @NotBlank(message = "피드 내용은 필수입니다.") @Size(
+
+    @field:NotBlank(message = "피드 내용은 필수입니다.")
+    @field:Size(
         min = 1,
         max = 2000,
         message = "내용은 1자 이상 2,000자 이하로 입력해주세요."
-    ) String,
+    )
+    @JvmField
+    val content: String,
 
-    @JvmField val imageUrl: String?
-) 
+    @JvmField
+    val imageUrl: String?
+)
