@@ -17,12 +17,11 @@ data class SellerOrderSummaryResponse(
     companion object {
         @JvmStatic
         fun from(op: OrderProducts): SellerOrderSummaryResponse {
-            // 1. 결제 상태 추출 (Stream 대신 코틀린 컬렉션 함수 사용)
-            val paymentStatus = op.order.payments.firstOrNull()?.status?.name ?: "READY"
 
-            // 2. 가독성을 위해 관련 객체를 미리 변수로 선언 (Property 접근법 활용)
-            val order = op.order
+            val order = op.order ?: throw IllegalStateException("해당 상품에 연결된 주문이 없습니다.")
             val product = op.product
+
+            val paymentStatus = order.payments.firstOrNull()?.status?.name ?: "READY"
             val user = order.user
 
             return SellerOrderSummaryResponse(

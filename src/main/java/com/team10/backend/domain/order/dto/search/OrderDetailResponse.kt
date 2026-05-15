@@ -65,7 +65,8 @@ data class OrderDetailResponse(
                 totalAmount = order.totalAmount,
                 paymentStatus = paymentStatus,
                 createdAt = order.createdAt,
-                delivery = OrderDeliveryDto.from(order.delivery),
+                delivery = order.delivery?.let { OrderDeliveryDto.from(it) }
+                    ?: throw IllegalArgumentException("배송 정보가 누락되었습니다."),
                 orderItems = items
             )
         }
