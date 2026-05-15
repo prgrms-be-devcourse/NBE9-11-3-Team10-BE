@@ -5,7 +5,7 @@ import com.team10.backend.domain.user.enums.Role
 
 data class LoginResponse(
     val id: Long,
-    val email: String,
+    @JvmField val email: String,
     val nickname: String,
     val role: Role
 ) {

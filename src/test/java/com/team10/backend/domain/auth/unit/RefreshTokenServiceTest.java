@@ -1,9 +1,9 @@
 package com.team10.backend.domain.auth.unit;
 
+import com.team10.backend.domain.auth.dto.RefreshResult;
 import com.team10.backend.domain.auth.entity.RefreshToken;
 import com.team10.backend.domain.auth.repository.RefreshTokenRepository;
 import com.team10.backend.domain.auth.service.RefreshTokenService;
-import com.team10.backend.domain.auth.dto.RefreshResult;
 import com.team10.backend.domain.user.entity.User;
 import com.team10.backend.domain.user.enums.Role;
 import com.team10.backend.global.exception.BusinessException;
@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -80,7 +79,7 @@ public class RefreshTokenServiceTest {
         given(refreshToken.getExpiresAt()).willReturn(LocalDateTime.now().plusDays(1));
 
         given(refreshTokenRepository.findByToken("old-token"))
-                .willReturn(Optional.of(refreshToken));
+                .willReturn(refreshToken);
 
         given(tokenProvider.generateToken(user.getId(), user.getRole()))
                 .willReturn("new-access-token");
@@ -116,7 +115,7 @@ public class RefreshTokenServiceTest {
     void refresh_fail_invalid_token() {
         // given
         given(refreshTokenRepository.findByToken("bad-token"))
-                .willReturn(Optional.empty());
+                .willReturn(null);
 
         // when & then
         BusinessException ex = assertThrows(
@@ -139,7 +138,7 @@ public class RefreshTokenServiceTest {
         refreshToken.revoke();
 
         given(refreshTokenRepository.findByToken("token"))
-                .willReturn(Optional.of(refreshToken));
+                .willReturn(refreshToken);
 
         // when & then
         BusinessException ex = assertThrows(
@@ -160,7 +159,7 @@ public class RefreshTokenServiceTest {
         given(refreshToken.getExpiresAt()).willReturn(LocalDateTime.now().minusDays(1));
 
         given(refreshTokenRepository.findByToken("token"))
-                .willReturn(Optional.of(refreshToken));
+                .willReturn(refreshToken);
 
         // when & then
         BusinessException ex = assertThrows(
