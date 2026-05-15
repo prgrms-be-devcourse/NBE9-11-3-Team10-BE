@@ -8,7 +8,7 @@ data class UpdateFeedRequestDto(
         min = 1,
         max = 2000,
         message = "내용은 1자 이상 2,000자 이하로 입력해주세요."
-    ) String?,
+    ) String,
 
         @JvmField val imageUrl: String?
 )
