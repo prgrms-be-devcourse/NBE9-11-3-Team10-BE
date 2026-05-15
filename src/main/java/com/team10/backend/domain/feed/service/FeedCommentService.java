@@ -40,7 +40,7 @@ public class FeedCommentService {
 
         FeedPost feedPost = getFeedPost(sellerId, feedId);
         FeedComment feedComment = feedCommentRepository.save(
-                new FeedComment(feedPost, currentUser, requestDto.content())
+                new FeedComment(feedPost, currentUser, requestDto.content)
         );
         feedPost.increaseCommentCount();
 
@@ -88,7 +88,7 @@ public class FeedCommentService {
             throw new BusinessException(ErrorCode.COMMENT_ACCESS_DENIED);
         }
 
-        feedComment.updateContent(requestDto.content());
+        feedComment.updateContent(requestDto.content);
 
 
         boolean liked = feedCommentLikeRepository.existsByFeedComment_IdAndUser_Id(

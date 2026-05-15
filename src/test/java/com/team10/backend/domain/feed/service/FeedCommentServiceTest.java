@@ -120,10 +120,10 @@ public class FeedCommentServiceTest {
                 100L
         );
 
-        assertThat(result.commentId()).isNotNull();
-        assertThat(result.content()).isEqualTo("댓글 내용입니다.");
-        assertThat(result.writer().userId()).isEqualTo(2L);
-        assertThat(result.isMine()).isTrue();
+        assertThat(result.commentId).isNotNull();
+        assertThat(result.content).isEqualTo("댓글 내용입니다.");
+        assertThat(result.writer.userId).isEqualTo(2L);
+        assertThat(result.isMine).isTrue();
         assertThat(feedCommentRepository.count()).isEqualTo(1);
         assertThat(commentCount).isEqualTo(1);
     }
@@ -150,12 +150,12 @@ public class FeedCommentServiceTest {
 
         CommentListResponseDto result = feedCommentService.getComments(1L, 100L, 0, 20, "createdAt,asc", buyer.getId());
 
-        assertThat(result.comments()).hasSize(1);
-        assertThat(result.comments().get(0).content()).isEqualTo("조회 댓글입니다.");
-        assertThat(result.comments().get(0).isLiked()).isTrue();
-        assertThat(result.comments().get(0).isMine()).isTrue();
-        assertThat(result.pagination().currentPage()).isEqualTo(0);
-        assertThat(result.pagination().totalElements()).isEqualTo(1);
+        assertThat(result.comments).hasSize(1);
+        assertThat(result.comments.get(0).content).isEqualTo("조회 댓글입니다.");
+        assertThat(result.comments.get(0).isLiked).isTrue();
+        assertThat(result.comments.get(0).isMine).isTrue();
+        assertThat(result.pagination.currentPage).isEqualTo(0);
+        assertThat(result.pagination.totalElements).isEqualTo(1);
     }
 
     @Test
@@ -194,11 +194,11 @@ public class FeedCommentServiceTest {
                 205L
         );
 
-        assertThat(result.commentId()).isEqualTo(205L);
-        assertThat(result.content()).isEqualTo("수정 후 댓글입니다.");
-        assertThat(result.writer().userId()).isEqualTo(2L);
-        assertThat(result.isLiked()).isTrue();
-        assertThat(result.isMine()).isTrue();
+        assertThat(result.commentId).isEqualTo(205L);
+        assertThat(result.content).isEqualTo("수정 후 댓글입니다.");
+        assertThat(result.writer.userId).isEqualTo(2L);
+        assertThat(result.isLiked).isTrue();
+        assertThat(result.isMine).isTrue();
         assertThat(updatedContent).isEqualTo("수정 후 댓글입니다.");
         assertThat(likeCount).isEqualTo(1);
     }
@@ -336,8 +336,8 @@ public class FeedCommentServiceTest {
                 2L
         );
 
-        assertThat(result.liked()).isTrue();
-        assertThat(result.likeCount()).isEqualTo(1);
+        assertThat(result.liked).isTrue();
+        assertThat(result.likeCount).isEqualTo(1);
         assertThat(likeCount).isEqualTo(1);
         assertThat(commentLikeCount).isEqualTo(1);
     }
@@ -378,8 +378,8 @@ public class FeedCommentServiceTest {
                 2L
         );
 
-        assertThat(result.liked()).isFalse();
-        assertThat(result.likeCount()).isEqualTo(0);
+        assertThat(result.liked).isFalse();
+        assertThat(result.likeCount).isEqualTo(0);
         assertThat(likeCount).isEqualTo(0);
         assertThat(commentLikeCount).isEqualTo(0);
     }
