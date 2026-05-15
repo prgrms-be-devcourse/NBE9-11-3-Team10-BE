@@ -28,23 +28,4 @@ interface SettlementRepository : JpaRepository<Settlement, Long> {
         cutoffDate: LocalDate,
         pageable: Pageable
     ): Page<Settlement>
-
-    /*
-    // 미정산 결제 건 탐색용 (배치용)
-    @Query("""
-        SELECT p FROM Payment p
-        WHERE p.status = 'PAID'
-        AND p.order.user.id = :sellerId
-        AND p.createdAt BETWEEN :startDate AND :endDate
-        AND NOT EXISTS (
-            SELECT 1 FROM SettlementDetail sd 
-            WHERE sd.payment.id = p.id
-        )
-    """)
-    fun findUnsettledPaymentsBySellerAndPeriod(
-        @Param("sellerId") sellerId: Long,
-        @Param("startDate") startDate: LocalDate,
-        @Param("endDate") endDate: LocalDate
-    ): List<com.team10.backend.domain.order.entity.Payment>
-    */
 }

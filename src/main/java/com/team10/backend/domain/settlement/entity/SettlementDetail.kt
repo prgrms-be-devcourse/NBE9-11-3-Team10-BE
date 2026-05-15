@@ -13,7 +13,7 @@ import jakarta.persistence.*
     ]
 )
 // 정산 명세는 감사/회계 목적의 불변 데이터이므로 소프트 삭제(@SQLDelete) 는 제거하는 것을 권장합니다.
-class SettlementDetail (
+class SettlementDetail @JvmOverloads constructor(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "settlement_id")
     var settlement: Settlement? = null,
@@ -46,28 +46,6 @@ class SettlementDetail (
     @Column(name = "is_deleted")
     var isDeleted: Boolean = false
 ) : BaseEntity() {
-
-    /**
-     * JPA 프록시 생성 및 리플렉션 초기화를 위한 무인자 생성자
-     * ⚠️ 비즈니스 로직에서 절대 호출되지 않으며, JPA 가 엔티티를 조회/생성할 때만 사용됩니다.
-     * Kotlin 은 모든 프로퍼티의 초기화를 강제하므로 null!! 로 임시 할당하지만,
-     * 런타임 시 Hibernate 가 실제 DB 데이터로 필드를 덮어쓰므로 안전합니다.
-     */
-    constructor() : this(
-        payment = null!!,
-        sellerId = 0L,
-        orderNumber = "",
-        grossAmount = 0L,
-        feeAmount = 0L,
-        refundDeducted = 0L,
-        netAmount = 0L
-    )
-
-    // == 연관관계 편의 메서드 ==
-    fun setSettlement(settlement: Settlement?) {
-        this.settlement = settlement
-    }
-
     // == 팩토리 메서드 (비즈니스 로직 전용) ==
     companion object {
         fun create(
@@ -94,14 +72,4 @@ class SettlementDetail (
             )
         }
     }
-
-    // == 조회용 getter (Kotlin property 접근 호환 및 방어적 코딩) ==
-    fun getPayment(): Payment = payment
-    fun getSellerId(): Long = sellerId
-    fun getOrderNumber(): String = orderNumber
-    fun getGrossAmount(): Long = grossAmount
-    fun getFeeAmount(): Long = feeAmount
-    fun getRefundDeducted(): Long = refundDeducted
-    fun getNetAmount(): Long = netAmount
-    fun getStatus(): String = status
 }
