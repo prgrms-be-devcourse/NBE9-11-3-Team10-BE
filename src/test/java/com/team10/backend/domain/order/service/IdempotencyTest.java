@@ -8,8 +8,6 @@ import com.team10.backend.domain.order.enums.PaymentStatus;
 import com.team10.backend.domain.order.enums.RequestType;
 import com.team10.backend.domain.order.repository.OrderRepository;
 import com.team10.backend.domain.order.repository.PaymentRepository;
-import com.team10.backend.global.exception.BusinessException;
-import com.team10.backend.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -195,7 +193,7 @@ public class IdempotencyTest {
         orderConfirmService.sendConfirmRequest(request, null);
 
         // then
-        Payment record = paymentRepository.findByOrderNumber(orderId).orElseThrow();
+        Payment record = paymentRepository.findByOrderNumber(orderId);
         assertThat(record.getStatus()).isEqualTo(PaymentStatus.PAID);
         assertThat(record.getResponseBody()).contains("DONE");
     }
@@ -283,7 +281,7 @@ public class IdempotencyTest {
 //                "발생한 예외는 BusinessException이어야 함. 실제 타입: " + actualException.getClass().getName());
 
         // then
-        Payment record = paymentRepository.findByOrderNumber(orderId).orElseThrow();
+        Payment record = paymentRepository.findByOrderNumber(orderId);
         assertThat(record.getStatus()).isEqualTo(PaymentStatus.FAILED);
     }
 
@@ -294,8 +292,8 @@ public class IdempotencyTest {
         String orderId = "ORD-SUCCESS-100";
         String tossKey = "toss_key_init";
         String savedJsonResponse = "{\"paymentKey\":\"key_123\",\"orderId\":\"" + orderId + "\",\"status\":\"DONE\"}";
-        Order order = orderRepository.findByOrderNumber(orderId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        Order order = orderRepository.findByOrderNumber(orderId);
+//                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         // 1. [수정] 바뀐 엔티티 구조에 맞게 PAYMENT 타입으로 레코드 생성
         // 정적 팩토리 메서드 createPayment를 사용하여 생성합니다.
         Payment record = Payment.createPayment(order, orderId,10000,tossKey,RequestType.PAYMENT);
@@ -319,7 +317,7 @@ public class IdempotencyTest {
                 .postForEntity(anyString(), any(), eq(TossConfirmResponse.class));
 
         // [추가 검증] DB에 저장된 타입이 PAYMENT가 맞는지 확인 (선택 사항)
-        Payment savedRecord = paymentRepository.findByOrderNumberAndType(orderId, RequestType.PAYMENT).orElseThrow();
+        Payment savedRecord = paymentRepository.findByOrderNumberAndType(orderId, RequestType.PAYMENT);
         assertThat(savedRecord.getType()).isEqualTo(RequestType.PAYMENT);
 
 //        log.info("외부 API 호출 없이 DB 데이터를 반환했습니다.");
