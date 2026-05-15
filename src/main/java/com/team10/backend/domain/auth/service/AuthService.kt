@@ -77,7 +77,7 @@ class AuthService(
 
     private fun authenticate(request: LoginRequest): User {
         val user = userRepository.findByEmail(request.email)
-            .orElseThrow { BusinessException(ErrorCode.LOGIN_FAILED) }
+            ?: throw BusinessException(ErrorCode.LOGIN_FAILED)
 
         if (!passwordEncoder.matches(request.password,user.password)) {
             throw BusinessException(ErrorCode.LOGIN_FAILED)

@@ -146,8 +146,8 @@ public class PaymentStatusServiceTest {
         assertThat(result.paymentKey).isEqualTo(paymentKey);
 
         // 2. DB 상태 확인 (Payment2 레코드가 생성되었고 PAID인지)
-        Payment savedPayment = paymentRepository.findByOrderNumber(orderId)
-                .orElseThrow(() -> new AssertionError("Payment2 레코드가 생성되지 않았습니다."));
+        Payment savedPayment = paymentRepository.findByOrderNumber(orderId);
+//                .orElseThrow(() -> new AssertionError("Payment2 레코드가 생성되지 않았습니다."));
 
         assertThat(savedPayment.getStatus()).isEqualTo(PaymentStatus.PAID);
         assertThat(savedPayment.getTotalAmount()).isEqualTo((int) amount);
@@ -310,7 +310,7 @@ public class PaymentStatusServiceTest {
 
         // 2. DB 검증: 새로운 레코드가 생성되지 않고 기존 레코드가 PAID로 업데이트되어야 함
         List<Payment> payments = paymentRepository.findAllByOrderOrderByCreatedAtAsc(
-                orderRepository.findByOrderNumber(originalOrderId).get()
+                orderRepository.findByOrderNumber(originalOrderId)
         );
 
         assertThat(payments).hasSize(1); // v2가 생성되지 않음
@@ -387,7 +387,7 @@ public class PaymentStatusServiceTest {
         assertThat(finalException).isInstanceOf(HttpServerErrorException.class);
 
         // then
-        Payment record = paymentRepository.findByOrderNumber(orderNumber).orElseThrow();
+        Payment record = paymentRepository.findByOrderNumber(orderNumber);
         assertThat(record.getStatus()).isEqualTo(PaymentStatus.FAILED);
     }
 }

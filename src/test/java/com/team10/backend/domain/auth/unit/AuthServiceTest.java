@@ -25,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -239,7 +238,7 @@ class AuthServiceTest {
                         .build();
 
         ReflectionTestUtils.setField(user, "id", 1L);
-        given(this.userRepository.findByEmail(request.email)).willReturn(Optional.of(user));
+        given(this.userRepository.findByEmail(request.email)).willReturn(user);
         given(passwordEncoder.matches(request.password, user.getPassword()))
                             .willReturn(true);
         given(tokenProvider.generateToken(user.getId(), user.getRole())).willReturn("test-access-token");
@@ -267,7 +266,7 @@ class AuthServiceTest {
                 .role(Role.BUYER)
                 .build();
 
-        given(this.userRepository.findByEmail(request.email)).willReturn(Optional.of(user));
+        given(this.userRepository.findByEmail(request.email)).willReturn(user);
         given(passwordEncoder.matches(request.password, user.getPassword())).willReturn(false);
 
         // when & then
