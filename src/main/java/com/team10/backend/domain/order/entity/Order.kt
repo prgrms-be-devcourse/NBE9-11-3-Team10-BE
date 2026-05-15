@@ -1,184 +1,128 @@
-package com.team10.backend.domain.order.entity;
+package com.team10.backend.domain.order.entity
 
-import com.team10.backend.domain.order.enums.OrderStatus;
-import com.team10.backend.domain.order.enums.PaymentStatus;
-import com.team10.backend.domain.user.entity.User;
-import com.team10.backend.global.entity.BaseEntity;
-import jakarta.persistence.*;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.team10.backend.domain.order.enums.OrderStatus
+import com.team10.backend.domain.order.enums.PaymentStatus
+import com.team10.backend.domain.user.entity.User
+import com.team10.backend.global.entity.BaseEntity
+import jakarta.persistence.*
+import org.hibernate.annotations.SQLDelete
+import org.hibernate.annotations.SQLRestriction
+import java.util.function.Consumer
 
 @Entity
 @Table(name = "orders")
 @SQLDelete(sql = "UPDATE orders SET is_deleted = true WHERE id = ?")
-@SQLRestriction("is_deleted = false") // 삭제 시 is_deleted 필드를 true로 UPDATE, 조회 할 때, true값 필터링 수행
-public class Order extends BaseEntity {
-
+@SQLRestriction("is_deleted = false")
+class Order(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    val user: User, // 불변성 유지
 
-    // 외부(토스 등)에 노출할 고유 주문 번호q
-    @Column(name = "order_number", nullable = false, unique = true)//유니크로 설정
-    private String orderNumber;
+    @Column(name = "order_number", nullable = false, unique = true)
+    val orderNumber: String,
 
     @Column(name = "total_amount")
-    private int totalAmount;
+    var totalAmount: Int,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private OrderStatus status; // PENDING, SUCCESS, CANCELLED
+    var status: OrderStatus = OrderStatus.PENDING,
 
     @Column(name = "is_deleted")
-    private boolean isDeleted;
+    var isDeleted: Boolean = false
+) : BaseEntity() {
 
-    private Order(User user, String orderNumber, int totalAmount) {
-        this.user = user;
-        this.orderNumber = orderNumber;
-        this.totalAmount = totalAmount;
-        this.status = OrderStatus.PENDING; // 생성 시 기본값
-        this.isDeleted = false;
+    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val orderProducts: MutableList<OrderProducts> = mutableListOf()
+
+    @OneToOne(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var delivery: OrderDelivery? = null
+        protected set
+
+    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
+    private val _payments: MutableList<Payment> = mutableListOf()
+    val payments: List<Payment> get() = _payments
+
+    // == 연관관계 및 비즈니스 로직 ==
+
+    fun assignDelivery(delivery: OrderDelivery) {
+        this.delivery = delivery
+        delivery.setOrder(this)
     }
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderProducts> orderProducts = new ArrayList<>();
+    fun addOrderProduct(orderProduct: OrderProducts) {
+        this.orderProducts.add(orderProduct)
+        orderProduct.assignOrder(this)
+    }
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private OrderDelivery delivery;
+    fun addPayment(payment: Payment) {
+        this._payments.add(payment)
+        payment.setOrder(this)
+    }
 
-    // 추가: 결제 이력을 관리하기 위한 리스트 (1:N)
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Payment> payments = new ArrayList<>();
+    fun cancelStatusOrder() {
+        this.status = OrderStatus.CANCELED
+    }
 
-    // == 생성 메서드 ==
-    public static Order createOrder(User user, String orderNumber, OrderDelivery delivery, List<OrderProducts> items) {
-        //총 합을 구한다.
-        int calculatedTotalAmount = items.stream()
-                .mapToInt(item -> item.getOrderPrice() * item.getQuantity())
-                .sum();
+    fun successStatusOrder() {
+        this.status = OrderStatus.SUCCESS
+    }
 
-        //오더 생성
-        Order order = Order.builder()
-                .user(user)
-                .orderNumber(orderNumber)
-                .totalAmount(calculatedTotalAmount)
-                .build();
+    companion object {
+        // 기존 서비스 코드와의 호환성을 위한 빌더 (코틀린에서는 생성자를 선호하지만 유지함)
+        fun builder() = OrderBuilder()
 
-        // 양방향 관계 설정
-        order.setDelivery(delivery);
-        items.forEach(order::addOrderProduct);
+        // 생성 메서드 (서비스 레이어에서 사용)
+        @JvmStatic
+        fun createOrder(
+            user: User,
+            orderNumber: String,
+            delivery: OrderDelivery,
+            items: List<OrderProducts>
+        ): Order {
+            val calculatedTotalAmount = items.sumOf { it.orderPrice * it.quantity }
 
-        // 추가: 주문 생성 시점에 초기 결제(Payment) 객체도 함께 생성하여 포함시킴
-        Payment initialPayment = Payment.builder()
+            val order = Order(
+                user = user,
+                orderNumber = orderNumber,
+                totalAmount = calculatedTotalAmount
+            )
+
+            // 양방향 관계 설정
+            order.assignDelivery(delivery)
+            items.forEach { order.addOrderProduct(it) }
+
+            // 초기 결제 객체 생성 및 포함
+            val initialPayment = Payment.builder()
                 .order(order)
                 .orderNumber(orderNumber)
-                .totalAmount(calculatedTotalAmount) // Payment 설계에 맞게 Long 형변환
+                .totalAmount(calculatedTotalAmount)
                 .status(PaymentStatus.READY)
-                .idempotencyKey(null)//임시로 null
-                .build();
-        order.addPayment(initialPayment);
+                .idempotencyKey(null)
+                .build()
 
-        return order;
-    }
+            order.addPayment(initialPayment)
 
-    // == 연관관계 편의 메서드 ==
-    private void setDelivery(OrderDelivery delivery) {
-        this.delivery = delivery;
-        delivery.setOrder(this);
-    }
-
-    private void addOrderProduct(OrderProducts orderProduct) {
-        this.orderProducts.add(orderProduct);
-        orderProduct.setOrder(this);
-    }
-
-    public void addPayment(Payment payment) {
-        this.payments.add(payment);
-        // Payment 엔티티에 setOrder 메서드가 필요합니다 (OrderDelivery처럼)
-        payment.setOrder(this);
-    }
-
-    public void cancelStatusOrder() {
-        // 만약 별도의 OrderStatus 필드가 있다면 CANCEL로 변경
-        this.status = OrderStatus.CANCELED;
-    }
-
-    public void successStatusOrder() {
-        // 만약 별도의 OrderStatus 필드가 있다면 CANCEL로 변경
-        this.status = OrderStatus.SUCCESS;
-    }
-
-    public User getUser() {
-        return this.user;
-    }
-
-    public String getOrderNumber() {
-        return this.orderNumber;
-    }
-
-    public int getTotalAmount() {
-        return this.totalAmount;
-    }
-
-    public OrderStatus getStatus() {
-        return this.status;
-    }
-
-    public boolean isDeleted() {
-        return this.isDeleted;
-    }
-
-    public List<OrderProducts> getOrderProducts() {
-        return this.orderProducts;
-    }
-
-    public OrderDelivery getDelivery() {
-        return this.delivery;
-    }
-
-    public List<Payment> getPayments() {
-        return this.payments;
-    }
-
-    protected Order() {
-    }
-
-    public static class OrderBuilder {
-        private User user;
-        private String orderNumber;
-        private int totalAmount;
-
-        OrderBuilder() {
-        }
-
-        public OrderBuilder user(User user) {
-            this.user = user;
-            return this;
-        }
-
-        public OrderBuilder orderNumber(String orderNumber) {
-            this.orderNumber = orderNumber;
-            return this;
-        }
-
-        public OrderBuilder totalAmount(int totalAmount) {
-            this.totalAmount = totalAmount;
-            return this;
-        }
-
-        public Order build() {
-            return new Order(this.user, this.orderNumber, this.totalAmount);
-        }
-
-        public String toString() {
-            return "Order.OrderBuilder(user=" + this.user + ", orderNumber=" + this.orderNumber + ", totalAmount=" + this.totalAmount + ")";
+            return order
         }
     }
 
-    public static OrderBuilder builder() {
-        return new OrderBuilder();
+    // 기존 자바 빌더와의 호환성을 위한 내부 클래스
+    class OrderBuilder {
+        private var user: User? = null
+        private var orderNumber: String? = null
+        private var totalAmount: Int = 0
+
+        fun user(user: User?) = apply { this.user = user }
+        fun orderNumber(orderNumber: String?) = apply { this.orderNumber = orderNumber }
+        fun totalAmount(totalAmount: Int) = apply { this.totalAmount = totalAmount }
+
+        fun build(): Order {
+            return Order(
+                user = user ?: throw IllegalArgumentException("User는 필수입니다."),
+                orderNumber = orderNumber ?: throw IllegalArgumentException("OrderNumber는 필수입니다."),
+                totalAmount = totalAmount
+            )
+        }
     }
 }
