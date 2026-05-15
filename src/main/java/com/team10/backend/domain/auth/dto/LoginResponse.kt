@@ -10,7 +10,6 @@ data class LoginResponse(
     val role: Role
 ) {
     companion object {
-        @JvmStatic
         fun from(user: User) = LoginResponse(
                 user.id,
                 user.email,
