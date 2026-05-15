@@ -1,119 +1,94 @@
-package com.team10.backend.domain.user.service;
+package com.team10.backend.domain.user.service
 
-import com.team10.backend.domain.image.service.ImageUploadService;
-import com.team10.backend.domain.user.dto.*;
-import com.team10.backend.domain.user.entity.SellerInfo;
-import com.team10.backend.domain.user.entity.User;
-import com.team10.backend.domain.user.enums.Role;
-import com.team10.backend.domain.user.repository.UserRepository;
-import com.team10.backend.global.exception.BusinessException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Objects;
-
-import static com.team10.backend.global.exception.ErrorCode.NOT_SELLER;
-import static com.team10.backend.global.exception.ErrorCode.USER_NOT_FOUND;
+import com.team10.backend.domain.image.service.ImageUploadService
+import com.team10.backend.domain.user.dto.ProfileImageUpdateRequest
+import com.team10.backend.domain.user.dto.SellerPublicResponse
+import com.team10.backend.domain.user.dto.SellerResponse
+import com.team10.backend.domain.user.dto.SellerUpdateRequest
+import com.team10.backend.domain.user.dto.UserResponse
+import com.team10.backend.domain.user.dto.UserUpdateRequest
+import com.team10.backend.domain.user.entity.User
+import com.team10.backend.domain.user.enums.Role
+import com.team10.backend.domain.user.repository.UserRepository
+import com.team10.backend.global.exception.BusinessException
+import com.team10.backend.global.exception.ErrorCode
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-public class UserService {
-
-    private final UserRepository userRepository;
-    private final ImageUploadService imageUploadService;
+class UserService(
+    private val userRepository: UserRepository,
+    private val imageUploadService: ImageUploadService
+) {
+    @Transactional(readOnly = true)
+    fun getUserProfile(userId: Long): UserResponse =
+        UserResponse.from(getUserEntity(userId))
 
     @Transactional(readOnly = true)
-    public UserResponse getUserProfile(Long userId) {
-        User user = getUserEntity(userId);
-
-        return UserResponse.from(user);
+    fun getSellerProfile(userId: Long): SellerResponse {
+        val user = getUserEntity(userId)
+        validateSellerRole(user)
+        return SellerResponse.from(user)
     }
 
     @Transactional(readOnly = true)
-    public SellerResponse getSellerProfile(Long userId) {
-        User user = getUserEntity(userId);
-
-        validateSellerRole(user);
-
-        return SellerResponse.from(user);
-    }
-
-    @Transactional(readOnly = true)
-    public SellerPublicResponse getSellerPublicProfile(Long id) {
-        User user = getUserEntity(id);
-
-        return SellerPublicResponse.from(user);
-    }
+    fun getSellerPublicProfile(id: Long): SellerPublicResponse =
+        SellerPublicResponse.from(getUserEntity(id))
 
     @Transactional
-    public UserResponse updateMyUserProfile(Long id, UserUpdateRequest request) {
-        User user = getUserEntity(id);
-        user.updateUserInfo(
-                request.nickname,
-                request.phoneNumber,
-                request.address
-        );
-
-        return UserResponse.from(user);
-    }
-
-    @Transactional
-    public SellerResponse updateMySellerProfile(Long id, SellerUpdateRequest request) {
-        User user = getUserEntity(id);
-
-        validateSellerRole(user);
+    fun updateMyUserProfile(id: Long, request: UserUpdateRequest): UserResponse {
+        val user = getUserEntity(id)
 
         user.updateUserInfo(
-                request.nickname,
-                request.phoneNumber,
-                request.address
-        );
+            request.nickname,
+            request.phoneNumber,
+            request.address
+        )
 
-        SellerInfo sellerInfo = user.getSellerInfo();
-        sellerInfo.updateSellerInfo(
-                request.bio,
-                request.businessNumber
-        );
-
-        return SellerResponse.from(user);
+        return UserResponse.from(user)
     }
 
     @Transactional
-    public UserResponse updateMyProfileImage(Long id, ProfileImageUpdateRequest request) {
-        User user = getUserEntity(id);
-        updateProfileImage(user, request.imageUrl);
-        return UserResponse.from(user);
-    }
+    fun updateMySellerProfile(id: Long, request: SellerUpdateRequest): SellerResponse {
+        val user = getUserEntity(id)
+        validateSellerRole(user)
 
+        user.updateSellerProfile(request)
+
+        return SellerResponse.from(user)
+    }
 
     @Transactional
-    public UserResponse deleteMyProfileImage(Long id) {
-        User user = getUserEntity(id);
-        updateProfileImage(user, null);
+    fun updateMyProfileImage(id: Long, request: ProfileImageUpdateRequest): UserResponse {
+        val user = getUserEntity(id)
+        updateProfileImage(user, request.imageUrl)
 
-        return UserResponse.from(user);
+        return UserResponse.from(user)
     }
 
-    private User getUserEntity(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+    @Transactional
+    fun deleteMyProfileImage(id: Long): UserResponse {
+        val user = getUserEntity(id)
+        updateProfileImage(user, null)
+
+        return UserResponse.from(user)
     }
 
-    private void updateProfileImage(User user, String imageUrl) {
-        String oldImageUrl = user.getImageUrl();
-        if (!Objects.equals(oldImageUrl, imageUrl)) {
-            imageUploadService.deleteIfManaged(oldImageUrl);
-            user.updateProfileImage(imageUrl);
+    private fun updateProfileImage(user: User, imageUrl: String?) {
+        val oldImageUrl = user.imageUrl
+        if (oldImageUrl != imageUrl) {
+            imageUploadService.deleteIfManaged(oldImageUrl)
+            user.updateProfileImage(imageUrl)
         }
     }
 
-    private void validateSellerRole(User user) {
-        if (user.getRole() != Role.SELLER) {
-            throw new BusinessException(NOT_SELLER);
-        }
-    }
+    private fun getUserEntity(userId: Long): User =
+        userRepository.findById(userId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
-    public UserService(UserRepository userRepository, ImageUploadService imageUploadService) {
-        this.userRepository = userRepository;
-        this.imageUploadService = imageUploadService;
+    private fun validateSellerRole(user: User) {
+        if (user.role != Role.SELLER) {
+            throw BusinessException(ErrorCode.NOT_SELLER)
+        }
     }
 }
