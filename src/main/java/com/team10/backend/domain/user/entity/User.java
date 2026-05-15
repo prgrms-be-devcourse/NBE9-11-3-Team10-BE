@@ -1,10 +1,17 @@
 package com.team10.backend.domain.user.entity;
 
 import com.team10.backend.domain.auth.dto.AuthRegisterRequest;
+import com.team10.backend.domain.user.dto.SellerUpdateRequest;
 import com.team10.backend.domain.user.enums.Role;
 import com.team10.backend.domain.user.enums.UserStatus;
 import com.team10.backend.global.entity.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
@@ -69,6 +76,19 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.phoneNumber = phoneNumber;
         this.address = address;
+    }
+
+    public void updateSellerProfile(SellerUpdateRequest request) {
+        updateUserInfo(
+                request.nickname,
+                request.phoneNumber,
+                request.address
+        );
+
+        this.sellerInfo.updateSellerInfo(
+                request.bio,
+                request.businessNumber
+        );
     }
 
     public void updateProfileImage(String imageUrl) {
