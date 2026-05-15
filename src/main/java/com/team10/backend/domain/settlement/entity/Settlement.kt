@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 )
 @SQLDelete(sql = "UPDATE settlements SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
-class Settlement (
+class Settlement @JvmOverloads constructor(
     @Column(name = "settlement_no", nullable = false, unique = true)
     val settlementNo: String,
 
@@ -47,7 +47,7 @@ class Settlement (
     // == 연관관계 편의 메서드 ==
     fun addDetail(detail: SettlementDetail) {
         details.add(detail)
-        detail.setSettlement(this)
+        detail.settlement = this
         // 집계 필드 자동 업데이트
         this.totalGrossAmount += detail.grossAmount
         this.totalFeeAmount += detail.feeAmount
@@ -57,7 +57,7 @@ class Settlement (
 
     fun removeDetail(detail: SettlementDetail) {
         details.remove(detail)
-        detail.setSettlement(null)
+        detail.settlement = null
         // 집계 필드 재계산 (단순화: 전체 재순회)
         recalculateSummary()
     }
@@ -102,19 +102,6 @@ class Settlement (
         this.status = SettlementStatus.FAILED
     }
 
-    // == 조회용 getter (Kotlin property 접근 호환) ==
-    fun getSettlementNo(): String = settlementNo
-    fun getSeller(): User = seller
-    fun getPeriodStart(): LocalDate = periodStart
-    fun getPeriodEnd(): LocalDate = periodEnd
-    fun getStatus(): SettlementStatus = status
-    fun getTotalGrossAmount(): Long = totalGrossAmount
-    fun getTotalFeeAmount(): Long = totalFeeAmount
-    fun getTotalRefundDeducted(): Long = totalRefundDeducted
-    fun getNetSettlementAmount(): Long = netSettlementAmount
-    fun getSettledAt(): java.time.LocalDateTime? = settledAt
-    fun getDetails(): List<SettlementDetail> = details.toList() // 불변 리스트 반환
-
     companion object {
         fun createSettlement(
             settlementNo: String,
@@ -131,11 +118,4 @@ class Settlement (
             )
         }
     }
-
-    constructor() : this(
-        settlementNo = "",
-        seller = User(),
-        periodStart = LocalDate.MIN,
-        periodEnd = LocalDate.MIN
-    )
 }
