@@ -2,6 +2,8 @@ package com.team10.backend.domain.order.entity
 
 import com.team10.backend.domain.product.entity.Product
 import com.team10.backend.global.entity.BaseEntity
+import com.team10.backend.global.exception.BusinessException
+import com.team10.backend.global.exception.ErrorCode
 import jakarta.persistence.*
 
 @Entity
@@ -46,7 +48,7 @@ class OrderProducts(
 
         fun build(): OrderProducts {
             return OrderProducts(
-                product = product ?: throw IllegalArgumentException("Product는 필수입니다."),
+                product = product ?: throw BusinessException(ErrorCode.PRODUCT_NOT_FOUND),
                 quantity = quantity,
                 orderPrice = orderPrice
             )

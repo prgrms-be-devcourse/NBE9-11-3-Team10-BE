@@ -4,6 +4,8 @@ import com.team10.backend.domain.order.enums.OrderStatus
 import com.team10.backend.domain.order.enums.PaymentStatus
 import com.team10.backend.domain.user.entity.User
 import com.team10.backend.global.entity.BaseEntity
+import com.team10.backend.global.exception.BusinessException
+import com.team10.backend.global.exception.ErrorCode
 import jakarta.persistence.*
 import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.SQLRestriction
@@ -47,7 +49,7 @@ class Order(
 
     fun assignDelivery(delivery: OrderDelivery) {
         this.delivery = delivery
-        delivery.setOrder(this)
+        delivery.assignOrder(this)
     }
 
     fun addOrderProduct(orderProduct: OrderProducts) {
@@ -119,8 +121,8 @@ class Order(
 
         fun build(): Order {
             return Order(
-                user = user ?: throw IllegalArgumentException("User는 필수입니다."),
-                orderNumber = orderNumber ?: throw IllegalArgumentException("OrderNumber는 필수입니다."),
+                user = user ?: throw BusinessException(ErrorCode.USER_NOT_FOUND),
+                orderNumber = orderNumber ?: throw BusinessException(ErrorCode.ORDER_NOT_FOUND),
                 totalAmount = totalAmount
             )
         }

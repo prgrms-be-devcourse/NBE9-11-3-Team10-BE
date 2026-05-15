@@ -47,6 +47,7 @@ public enum ErrorCode {
     //=== 배송 도메인(7000~7999) ===
     CANNOT_CANCEL_SHIPPING_ORDER("DELIVERY_01", "이미 출고된 상품은 취소할 수 없습니다.", HttpStatus.BAD_REQUEST),
     DELIVERY_NOT_FOUND("DELIVERY_02", "배송 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    SHIPPING_ADDRESS_REQUIRED("DELIVERY_03", "배송 주소는 필수 항목입니다.", HttpStatus.BAD_REQUEST),
 
     //====토스 외부 API 예외처리=====
     // -------승인 비즈니스 오류(400,404,403)-----
