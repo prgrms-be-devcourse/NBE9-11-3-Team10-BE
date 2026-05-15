@@ -1,90 +1,55 @@
-package com.team10.backend.domain.order.entity;
+package com.team10.backend.domain.order.entity
 
-import com.team10.backend.domain.product.entity.Product;
-import com.team10.backend.global.entity.BaseEntity;
-import jakarta.persistence.*;
+import com.team10.backend.domain.product.entity.Product
+import com.team10.backend.global.entity.BaseEntity
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "order_products")
-public class OrderProducts extends BaseEntity {
-
-    // Order와의 연관관계를 맺어주는 핵심 메서드
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
+class OrderProducts(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    val product: Product, // 불변 프로퍼티
 
     @Column(nullable = false)
-    private int quantity;
+    var quantity: Int,
 
-    private int orderPrice; // 주문 당시의 가격
+    @Column(nullable = false)
+    var orderPrice: Int // 주문 당시의 가격
+) : BaseEntity() {
 
-    private OrderProducts(Product product, int quantity, int orderPrice) {
-        this.product = product;
-        this.quantity = quantity;
-        this.orderPrice = orderPrice;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    var order: Order? = null
+        // protected set을 사용하여 외부 직접 할당은 막고 JPA 프록시/연관관계 메서드에는 열어둠
+        protected set
+
+    // == 연관관계 편의 메서드 ==
+    fun assignOrder(order: Order) {
+        this.order = order
     }
 
-    // Order와의 연관관계를 맺어주는 핵심 메서드
-    public void setOrder(Order order) {
-        this.order = order;
+    companion object {
+        @JvmStatic
+        fun builder() = OrderProductsBuilder()
     }
 
-    public Order getOrder() {
-        return this.order;
-    }
+    // 기존 자바 서비스 코드와의 호환성을 위한 빌더
+    class OrderProductsBuilder {
+        private var product: Product? = null
+        private var quantity: Int = 0
+        private var orderPrice: Int = 0
 
-    public Product getProduct() {
-        return this.product;
-    }
+        fun product(product: Product?) = apply { this.product = product }
+        fun quantity(quantity: Int) = apply { this.quantity = quantity }
+        fun orderPrice(orderPrice: Int) = apply { this.orderPrice = orderPrice }
 
-    public int getQuantity() {
-        return this.quantity;
-    }
-
-    public int getOrderPrice() {
-        return this.orderPrice;
-    }
-
-    protected OrderProducts() {
-    }
-
-    public static class OrderProductsBuilder {
-        private Product product;
-        private int quantity;
-        private int orderPrice;
-
-        OrderProductsBuilder() {
+        fun build(): OrderProducts {
+            return OrderProducts(
+                product = product ?: throw IllegalArgumentException("Product는 필수입니다."),
+                quantity = quantity,
+                orderPrice = orderPrice
+            )
         }
-
-        public OrderProductsBuilder product(Product product) {
-            this.product = product;
-            return this;
-        }
-
-        public OrderProductsBuilder quantity(int quantity) {
-            this.quantity = quantity;
-            return this;
-        }
-
-        public OrderProductsBuilder orderPrice(int orderPrice) {
-            this.orderPrice = orderPrice;
-            return this;
-        }
-
-        public OrderProducts build() {
-            return new OrderProducts(this.product, this.quantity, this.orderPrice);
-        }
-
-        public String toString() {
-            return "OrderProducts.OrderProductsBuilder(product=" + this.product + ", quantity=" + this.quantity + ", orderPrice=" + this.orderPrice + ")";
-        }
-    }
-
-    public static OrderProductsBuilder builder() {
-        return new OrderProductsBuilder();
     }
 }
