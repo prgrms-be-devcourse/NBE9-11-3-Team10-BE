@@ -10,8 +10,8 @@ data class OrderDeliveryDto(
     companion object {
         fun from(delivery: OrderDelivery): OrderDeliveryDto {
             return OrderDeliveryDto(
-                deliveryAddress = delivery.delivery_address,
-                trackingNumber = delivery.tracking_number
+                deliveryAddress = delivery.deliveryAddress,
+                trackingNumber = delivery.trackingNumber
             )
         }
     }
