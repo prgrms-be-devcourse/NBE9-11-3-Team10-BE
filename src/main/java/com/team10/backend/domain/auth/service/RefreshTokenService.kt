@@ -1,72 +1,64 @@
-package com.team10.backend.domain.auth.service;
+package com.team10.backend.domain.auth.service
 
-import com.team10.backend.domain.auth.dto.RefreshResult;
-import com.team10.backend.domain.auth.entity.RefreshToken;
-import com.team10.backend.domain.auth.repository.RefreshTokenRepository;
-import com.team10.backend.domain.user.entity.User;
-import com.team10.backend.global.exception.BusinessException;
-import com.team10.backend.global.exception.ErrorCode;
-import com.team10.backend.global.security.TokenProvider;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.team10.backend.domain.auth.dto.RefreshResult
+import com.team10.backend.domain.auth.entity.RefreshToken
+import com.team10.backend.domain.auth.repository.RefreshTokenRepository
+import com.team10.backend.domain.user.entity.User
+import com.team10.backend.global.exception.BusinessException
+import com.team10.backend.global.exception.ErrorCode
+import com.team10.backend.global.security.TokenProvider
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.util.UUID
 
 @Service
-public class RefreshTokenService {
-
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final TokenProvider tokenProvider;
-
+class RefreshTokenService(
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val tokenProvider: TokenProvider
+) {
     @Transactional
-    public String createRefreshToken(User user) {
-        String token = UUID.randomUUID().toString();
-        RefreshToken refreshToken = RefreshToken.create(token, user);
-        refreshTokenRepository.save(refreshToken);
-        return token;
+    fun createRefreshToken(user: User): String {
+        val token = UUID.randomUUID().toString()
+        refreshTokenRepository.save(RefreshToken.create(token, user))
+
+        return token
     }
 
     @Transactional
-    public RefreshResult refresh(String token) {
-        RefreshToken oldRefreshToken = validateRefreshToken(token);
-        oldRefreshToken.revoke();
+    fun refresh(token: String?): RefreshResult {
+        val oldRefreshToken = validateRefreshToken(token)
+        oldRefreshToken.revoke()
 
-        User user = oldRefreshToken.getUser();
+        val user = oldRefreshToken.user
 
-        String newAccessToken = tokenProvider.generateToken(user.getId(), user.getRole());
-        String newRefreshToken = createRefreshToken(user);
+        val newAccessToken = tokenProvider.generateToken(user.id, user.role)
+        val newRefreshToken = createRefreshToken(user)
 
-        return new RefreshResult(newAccessToken, newRefreshToken);
+        return RefreshResult(newAccessToken, newRefreshToken)
     }
 
-    private RefreshToken validateRefreshToken(String token) {
-        if (!StringUtils.hasText(token)) {
-            throw new BusinessException(ErrorCode.MISSING_REFRESH_TOKEN);
+    private fun validateRefreshToken(token: String?): RefreshToken {
+        if (token.isNullOrBlank()) {
+            throw BusinessException(ErrorCode.MISSING_REFRESH_TOKEN)
         }
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
+        val refreshToken = refreshTokenRepository.findByToken(token)
+            ?: throw BusinessException(ErrorCode.INVALID_REFRESH_TOKEN)
 
         // 로그아웃 상태 || 이미 사용한 토큰 || 만료일이 지난 토큰
-        if (refreshToken.isRevoked() || refreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        if (refreshToken.isRevoked || refreshToken.expiresAt.isBefore(LocalDateTime.now())) {
+            throw BusinessException(ErrorCode.INVALID_REFRESH_TOKEN)
         }
 
-        return refreshToken;
+        return refreshToken
     }
 
     @Transactional
-    public void revoke(String token) {
-        if (!StringUtils.hasText(token)) {
-            return;
+    fun revoke(token: String?) {
+        if (token.isNullOrBlank()) {
+            return
         }
-        refreshTokenRepository.findByToken(token).ifPresent(RefreshToken::revoke);
-    }
-
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, TokenProvider tokenProvider) {
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.tokenProvider = tokenProvider;
+        refreshTokenRepository.findByToken(token)?.revoke()
     }
 }
