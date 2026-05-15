@@ -70,6 +70,15 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    // 📌 Kotlin Test
+    testImplementation("io.mockk:mockk:1.14.9")  // Kotlin 친화적 목킹 라이브러리
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    // 📌 DataFaker
+    implementation("net.datafaker:datafaker:2.5.4")
+    testImplementation("net.datafaker:datafaker:2.5.4")
+
     // 📌 QueryDSL (KSP 기반, 추후 추가)
 //    implementation ("io.github.openfeign.querydsl:querydsl-jpa:7.1")
 //    kapt ("io.github.openfeign.querydsl:querydsl-apt:7.1:jpa")
@@ -82,10 +91,6 @@ dependencies {
     // 테스트용도 동일하게 적용
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
-
-    // DataFaker
-    implementation("net.datafaker:datafaker:2.5.4")
-    testImplementation("net.datafaker:datafaker:2.5.4")
 }
 
 kotlin {
