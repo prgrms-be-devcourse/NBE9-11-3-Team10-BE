@@ -108,8 +108,8 @@ public class FeedPostServiceTest {
         FeedListResponseDto result = feedPostService.getFeedsList(sellerId, testUser.getId());
 
         // then
-        assertThat(result.feeds()).hasSize(1);
-        assertThat(result.feeds().get(0).content()).isEqualTo("테스트 내용");
+        assertThat(result.feeds).hasSize(1);
+        assertThat(result.feeds.get(0).content).isEqualTo("테스트 내용");
     }
 
     @Test
@@ -136,9 +136,9 @@ public class FeedPostServiceTest {
         FeedResponseDto result = feedPostService.createFeed(requestDto, testUser.getId());
 
 
-        assertThat(result.feedId()).isNotNull();
-        assertThat(result.content()).isEqualTo("테스트 피드 내용입니다.");
-        assertThat(result.imageUrl()).isEqualTo("https://test-image.com");
+        assertThat(result.feedId).isNotNull();
+        assertThat(result.content).isEqualTo("테스트 피드 내용입니다.");
+        assertThat(result.imageUrl).isEqualTo("https://test-image.com");
         assertThat(feedPostRepository.count()).isEqualTo(1);
     }
 
@@ -163,9 +163,9 @@ public class FeedPostServiceTest {
 
         UpdateFeedResponseDto result = feedPostService.updateFeed(100L, requestDto, testUser.getId());
 
-        assertThat(result.feedId()).isEqualTo(100L);
-        assertThat(result.content()).isEqualTo("수정된 피드입니다");
-        assertThat(result.imageUrl()).isEqualTo("https://test.com/new-image.jpg");
+        assertThat(result.feedId).isEqualTo(100L);
+        assertThat(result.content).isEqualTo("수정된 피드입니다");
+        assertThat(result.imageUrl).isEqualTo("https://test.com/new-image.jpg");
 
         var updatedFeed = feedPostRepository.findById(100L).orElseThrow();
         assertThat(updatedFeed.getContent()).isEqualTo("수정된 피드입니다");
@@ -265,8 +265,8 @@ public class FeedPostServiceTest {
                 2L
         );
 
-        assertThat(result.liked()).isTrue();
-        assertThat(result.likeCount()).isEqualTo(1);
+        assertThat(result.liked).isTrue();
+        assertThat(result.likeCount).isEqualTo(1);
         assertThat(likeCount).isEqualTo(1);
         assertThat(feedLikeCount).isEqualTo(1);
     }
@@ -308,8 +308,8 @@ public class FeedPostServiceTest {
                 2L
         );
 
-        assertThat(result.liked()).isFalse();
-        assertThat(result.likeCount()).isEqualTo(0);
+        assertThat(result.liked).isFalse();
+        assertThat(result.likeCount).isEqualTo(0);
         assertThat(likeCount).isEqualTo(0);
         assertThat(feedLikeCount).isEqualTo(0);
     }
