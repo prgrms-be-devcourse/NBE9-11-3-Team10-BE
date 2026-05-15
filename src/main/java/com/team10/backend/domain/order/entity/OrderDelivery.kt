@@ -1,93 +1,74 @@
-package com.team10.backend.domain.order.entity;
+package com.team10.backend.domain.order.entity
 
-import com.team10.backend.domain.order.enums.DeliveryStatus;
-import com.team10.backend.global.entity.BaseEntity;
-import jakarta.persistence.*;
+import com.team10.backend.domain.order.enums.DeliveryStatus
+import com.team10.backend.global.entity.BaseEntity
+import com.team10.backend.global.exception.BusinessException
+import com.team10.backend.global.exception.ErrorCode
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "order_delivery")
-public class OrderDelivery extends BaseEntity {
+class OrderDelivery(
+    @Column(name = "delivery_address")
+    var deliveryAddress: String, // 카멜케이스 적용, 주 생성자로 올림
+
+    @Column(name = "tracking_number")
+    var trackingNumber: String? = null // 송장은 초기값이 null일 수 있음
+) : BaseEntity() {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
-
-    @Column(name = "delivery_address")
-    private String delivery_address;
-
-    @Column(name = "tracking_number")
-    private String tracking_number;
+    var order: Order? = null
+        protected set
 
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_status")
-    private DeliveryStatus status;
+    var status: DeliveryStatus? = null
+        protected set
 
-    private OrderDelivery(String delivery_address, String tracking_number) {
-        this.delivery_address = delivery_address;
-        this.tracking_number = tracking_number;
+    // == 비즈니스 로직 ==
+
+    fun startReady() {
+        this.status = DeliveryStatus.READY
     }
 
-    // 결제 완료 시 호출될 메서드
-    public void startReady() {
-        this.status = DeliveryStatus.READY;
+    fun updateTracking(trackingNumber: String) {
+        this.trackingNumber = trackingNumber
+        this.status = DeliveryStatus.SHIPPING
     }
 
-    // 송장 입력 시 호출될 메서드
-    public void updateTracking(String trackingNumber) {
-        this.tracking_number = trackingNumber;
-        this.status = DeliveryStatus.SHIPPING;
+    fun assignOrder(order: Order) {
+        this.order = order
     }
 
-    public void setOrder(Order order) {
-        this.order = order;
+    companion object {
+        @JvmStatic
+        fun builder() = OrderDeliveryBuilder()
     }
 
-    public Order getOrder() {
-        return this.order;
-    }
+    // == 기존 서비스 레이어 호환을 위한 빌더 ==
+    class OrderDeliveryBuilder {
+        private var deliveryAddress: String? = null
+        private var trackingNumber: String? = null
 
-    public String getDelivery_address() {
-        return this.delivery_address;
-    }
-
-    public String getTracking_number() {
-        return this.tracking_number;
-    }
-
-    public DeliveryStatus getStatus() {
-        return this.status;
-    }
-
-    protected OrderDelivery() {
-    }
-
-    public static class OrderDeliveryBuilder {
-        private String delivery_address;
-        private String tracking_number;
-
-        OrderDeliveryBuilder() {
+        // 자바 서비스에서 delivery_address()로 호출하고 있을 경우를 대비해 메서드명 유지
+        fun delivery_address(deliveryAddress: String) = apply {
+            this.deliveryAddress = deliveryAddress
         }
 
-        public OrderDeliveryBuilder delivery_address(String delivery_address) {
-            this.delivery_address = delivery_address;
-            return this;
+        fun tracking_number(trackingNumber: String?) = apply {
+            this.trackingNumber = trackingNumber
         }
 
-        public OrderDeliveryBuilder tracking_number(String tracking_number) {
-            this.tracking_number = tracking_number;
-            return this;
+        fun build(): OrderDelivery {
+            return OrderDelivery(
+                deliveryAddress = deliveryAddress ?: throw BusinessException(ErrorCode.SHIPPING_ADDRESS_REQUIRED),
+                trackingNumber = trackingNumber
+            )
         }
 
-        public OrderDelivery build() {
-            return new OrderDelivery(this.delivery_address, this.tracking_number);
+        override fun toString(): String {
+            return "OrderDelivery.OrderDeliveryBuilder(deliveryAddress=$deliveryAddress, trackingNumber=$trackingNumber)"
         }
-
-        public String toString() {
-            return "OrderDelivery.OrderDeliveryBuilder(delivery_address=" + this.delivery_address + ", tracking_number=" + this.tracking_number + ")";
-        }
-    }
-
-    public static OrderDeliveryBuilder builder() {
-        return new OrderDeliveryBuilder();
     }
 }
