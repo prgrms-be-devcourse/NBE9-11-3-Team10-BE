@@ -107,7 +107,7 @@ object OrderDeliveryFixture {
         }
 
         // 양방향 관계 설정 (OrderDelivery → Order)
-        delivery.setOrder(order)
+        delivery.assignOrder(order)
         return delivery
     }
 

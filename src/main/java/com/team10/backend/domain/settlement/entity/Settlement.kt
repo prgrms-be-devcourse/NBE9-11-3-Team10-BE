@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 )
 @SQLDelete(sql = "UPDATE settlements SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
-class Settlement @JvmOverloads constructor(
+class Settlement (
     @Column(name = "settlement_no", nullable = false, unique = true)
     val settlementNo: String,
 
