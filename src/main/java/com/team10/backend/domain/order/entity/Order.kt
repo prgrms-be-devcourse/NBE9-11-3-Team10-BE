@@ -59,7 +59,7 @@ class Order(
 
     fun addPayment(payment: Payment) {
         this._payments.add(payment)
-        payment.setOrder(this)
+        payment.assignOrder(this)
     }
 
     fun cancelStatusOrder() {
