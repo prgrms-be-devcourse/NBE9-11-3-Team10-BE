@@ -33,8 +33,11 @@ public class PaymentService {
         Payment payment = paymentRepository.findByOrderNumber(request.orderId)
                 .orElseThrow(() -> new BusinessException(PAYMENT_NOT_FOUND));
 
-        Order order = orderRepository.findByOrderNumber(request.orderId)
-                .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
+        Order order = orderRepository.findByOrderNumber(request.orderId);
+        if (order == null) {
+            throw new BusinessException(ORDER_NOT_FOUND);
+        }
+
 
         OrderDelivery delivery = orderDeliveryRepository.findById(order.getId())
                 .orElseThrow(() -> new BusinessException(DELIVERY_NOT_FOUND));

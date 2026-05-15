@@ -164,8 +164,10 @@ public class OrderService {
     public OrderDetailResponse getOrderDetail(Long curUserId, String orderNumber) {
 
         // 1. 주문 상세 조회 (없으면 예외 발생)
-        Order order = orderRepository.findByOrderNumberWithDetails(orderNumber)
-                .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
+        Order order = orderRepository.findByOrderNumberWithDetails(orderNumber);
+        if (order == null) {
+            throw new BusinessException(ORDER_NOT_FOUND);
+        }
 
         User user = findUser(curUserId);
 
@@ -191,8 +193,10 @@ public class OrderService {
     @Transactional
     public void deleteOrderSoft(Long userId, String orderNumber) {
         //주문 내역 조회
-        Order order = orderRepository.findByOrderNumber(orderNumber)
-                .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
+        Order order = orderRepository.findByOrderNumber(orderNumber);
+        if (order == null) {
+            throw new BusinessException(ORDER_NOT_FOUND);
+        }
 
         //권한 및 배송 상태 검증
         validateOrderDelete(userId, order);
