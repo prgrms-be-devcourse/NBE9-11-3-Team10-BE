@@ -1,92 +1,34 @@
-package com.team10.backend.domain.order.service;
+package com.team10.backend.domain.order.service
 
-import com.team10.backend.domain.order.dto.confirm.ConfirmRequest;
-import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse;
-import com.team10.backend.domain.order.entity.Order;
-import com.team10.backend.domain.order.entity.OrderDelivery;
-import com.team10.backend.domain.order.entity.Payment;
-import com.team10.backend.domain.order.repository.OrderDeliveryRepository;
-import com.team10.backend.domain.order.repository.OrderRepository;
-import com.team10.backend.domain.order.repository.PaymentRepository;
-import com.team10.backend.global.exception.BusinessException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import static com.team10.backend.global.exception.ErrorCode.*;
+import com.team10.backend.domain.order.dto.confirm.ConfirmRequest
+import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse
+import lombok.RequiredArgsConstructor
+import org.springframework.stereotype.Service
 
 //import lombok.extern.slf4j.Slf4j;
-
 @Service
-//@Slf4j
-public class PaymentService {
+class PaymentService(
+    private val paymentCheckService: PaymentCheckService,
+    private val paymentUpdateService: PaymentUpdateService,
+    private val orderConfirmService: OrderConfirmService
+) {
 
-    private final PaymentRepository paymentRepository;
-    private final OrderRepository orderRepository;
-    private final OrderDeliveryRepository orderDeliveryRepository;
-    private final OrderConfirmService orderConfirmService; // 외부 API 호출 컴포넌트
+    fun confirmPayment(request: ConfirmRequest): TossConfirmResponse {
+        // 1. 사전 검증 (TX 1 시작 및 종료)
+        paymentCheckService.validatePaymentRequest(request)
 
-    @Transactional// 제거
-    public TossConfirmResponse confirmPayment(ConfirmRequest request) {
-        //todo 유저 검증하는 부분, 해당 유저가 해당 오더 넘버를 가지고 있는게 맞는지
-        // 1. 비즈니스 검증: DB의 금액과 요청 금액 비교 , 주문 생성시에
-//        log.info("조회 시도 - request.orderId: [{}]", request.orderId());
-        Payment payment = paymentRepository.findByOrderNumber(request.orderId);
-        if(payment == null){
-            throw new BusinessException(PAYMENT_NOT_FOUND);
-        }
+        // 2. 결제 승인 요청 (내부에서 REQUIRES_NEW로 시도 기록 저장 후 API 호출)
+        // 이 구간에서는 메인 트랜잭션이 없으므로 DB 커넥션을 점유하지 않습니다.
+        val response = orderConfirmService.sendConfirmRequest(request, null)
 
-        Order order = orderRepository.findByOrderNumber(request.orderId);
-        if (order == null) {
-            throw new BusinessException(ORDER_NOT_FOUND);
-        }
+        // 3. 후처리 (TX 2 시작 및 종료)
+        // API 승인이 성공했으므로 우리 DB 상태를 최종 업데이트합니다.
+        paymentUpdateService.completeOrderAndFinalizeRecord(
+            orderId = request.orderId,
+            paymentKey = request.paymentKey,
+            response = response
+        )
 
-
-        OrderDelivery delivery = orderDeliveryRepository.findById(order.getId())
-                .orElseThrow(() -> new BusinessException(DELIVERY_NOT_FOUND));
-
-        //프론트에서 금액을 위조했을 경우
-        if (payment.getTotalAmount() != request.amount) {
-            throw new BusinessException(AMOUNT_MISMATCH);
-        }
-
-        // 2. 토스 서버로 승인 요청 (외부 통신)
-        // paymentKey, orderId, amount를 헤더와 함께 전송
-        TossConfirmResponse response = orderConfirmService.sendConfirmRequest(request, null);
-
-        // 3. 결제 성공 후 상태 변경 (후처리)
-        statusChangeAfterSuccess(payment, request.paymentKey, order, delivery);
-
-        return response;
-    }
-
-    //transactional
-    public void statusChangeAfterSuccess(Payment payment, String paymentKey, Order order, OrderDelivery delivery) {
-        completePayment(payment, paymentKey);
-        updateOrderStatus(order);
-        startReady(delivery);
-
-        paymentRepository.save(payment);
-        orderRepository.save(order);
-        orderDeliveryRepository.save(delivery);
-    }
-
-    private void completePayment(Payment payment, String paymentKey) {
-//        log.info("결제 완료 처리 시작: {}", paymentKey);
-        payment.completePayment(paymentKey);
-    }
-
-    private void updateOrderStatus(Order order) {
-        order.successStatusOrder();
-    }
-
-    private void startReady(OrderDelivery delivery) {
-        delivery.startReady();
-    }
-
-    public PaymentService(PaymentRepository paymentRepository, OrderRepository orderRepository, OrderDeliveryRepository orderDeliveryRepository, OrderConfirmService orderConfirmService) {
-        this.paymentRepository = paymentRepository;
-        this.orderRepository = orderRepository;
-        this.orderDeliveryRepository = orderDeliveryRepository;
-        this.orderConfirmService = orderConfirmService;
+        return response
     }
 }
