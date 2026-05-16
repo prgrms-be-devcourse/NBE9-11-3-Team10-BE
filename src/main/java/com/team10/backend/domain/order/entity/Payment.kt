@@ -65,6 +65,11 @@ class Payment(
         this.status = PaymentStatus.FAILED
     }
 
+    fun expirePayment() {
+        this.status = PaymentStatus.EXPIRED
+    }
+
+
     fun markAsPending() {
         this.status = PaymentStatus.PENDING
     }

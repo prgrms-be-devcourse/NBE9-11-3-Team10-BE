@@ -66,6 +66,10 @@ class Order(
         this.status = OrderStatus.CANCELED
     }
 
+    fun expireStatusOrder() {
+        this.status = OrderStatus.EXPIRED
+    }
+
     fun successStatusOrder() {
         this.status = OrderStatus.SUCCESS
     }
