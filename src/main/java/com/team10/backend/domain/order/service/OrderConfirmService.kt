@@ -1,238 +1,181 @@
-package com.team10.backend.domain.order.service;
+package com.team10.backend.domain.order.service
 
-import com.team10.backend.domain.order.dto.confirm.ConfirmRequest;
-import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse;
-import com.team10.backend.domain.order.entity.Order;
-import com.team10.backend.domain.order.entity.Payment;
-import com.team10.backend.domain.order.enums.PaymentStatus;
-import com.team10.backend.domain.order.enums.RequestType;
-import com.team10.backend.domain.order.repository.OrderRepository;
-import com.team10.backend.global.exception.BusinessException;
-import com.team10.backend.global.exception.ErrorCode;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-
-import java.util.Base64;
-import java.util.UUID;
-
-import static com.team10.backend.global.exception.ErrorCode.*;
+import com.team10.backend.domain.order.dto.confirm.ConfirmRequest
+import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse
+import com.team10.backend.domain.order.enums.PaymentStatus
+import com.team10.backend.domain.order.enums.RequestType
+import com.team10.backend.domain.order.repository.OrderRepository
+import com.team10.backend.global.exception.BusinessException
+import com.team10.backend.global.exception.ErrorCode
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.*
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Recover
+import org.springframework.retry.annotation.Retryable
+import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.HttpServerErrorException
+import org.springframework.web.client.ResourceAccessException
+import org.springframework.web.client.RestTemplate
+import tools.jackson.databind.ObjectMapper
+import java.util.*
 
 //import lombok.extern.slf4j.Slf4j;
+@Service //@Slf4j
+class OrderConfirmService(
+    private val objectMapper: ObjectMapper,
+    private val restTemplate: RestTemplate,
+    private val paymentStatusService: PaymentStatusService,
+    private val orderRepository: OrderRepository,
+    @Value("\${custom.toss.payment.secret-key}") private val secretKey: String
+) {
 
-@Service
-//@Slf4j
-public class OrderConfirmService {
-
-    @Value("${custom.toss.payment.secret-key}")
-    private String secretKey;
-
-    private final String TOSS_URL = "https://api.tosspayments.com/v1/payments";
-    private final ObjectMapper objectMapper;
-
-    private final RestTemplate restTemplate;
-    private final PaymentStatusService paymentStatusService;
-    private final OrderRepository orderRepository;
+    private val tossUrl = "https://api.tosspayments.com/v1/payments"
 
     // 1. 재시도 로직
     @Retryable(
-            value = {ResourceAccessException.class},
-            exclude = {BusinessException.class},
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000, multiplier = 2)
+        value = [ResourceAccessException::class],
+        exclude = [BusinessException::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 1000, multiplier = 2.0) // 코틀린에서는 double 표기 명시
     )
-    public TossConfirmResponse sendConfirmRequest(ConfirmRequest request, String testCode) {
-        HttpHeaders headers = new HttpHeaders();
+    fun sendConfirmRequest(request: ConfirmRequest, testCode: String?): TossConfirmResponse {
+        val headers = HttpHeaders()
 
         if (testCode != null) {
-            headers.add("TossPayments-Test-Code", testCode);
+            headers.add("TossPayments-Test-Code", testCode)
         }
 
-        // 시크릿 키 인증 헤더 설정
-        String encodedKey = Base64.getEncoder().encodeToString((secretKey + ":").getBytes());
+        // 시크릿 키 문자열 템플릿 처리 후 인코딩
+        val encodedKey = Base64.getEncoder().encodeToString("$secretKey:".toByteArray())
 
-        Order order = orderRepository.findByOrderNumber(request.orderId);
-        if (order == null) {
-            throw new BusinessException(ORDER_NOT_FOUND);
+        val order = orderRepository.findByOrderNumber(request.orderId)
+            ?: throw BusinessException(ErrorCode.ORDER_NOT_FOUND)
+
+        val currentPayment = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
+
+        // 이미 성공한 요청이면 저장된 응답 반환 (스마트 캐스트를 위해 명시적 반환 타입 보장)
+        if (currentPayment.status == PaymentStatus.PAID) {
+            val responseBody = currentPayment.responseBody
+                ?: throw BusinessException(ErrorCode.PAYMENT_NOT_FOUND) // 혹은 데이터 정합성 에러
+            return paymentStatusService.parseResponse(responseBody)
         }
 
+        val tossIdempotencyKey = currentPayment.idempotencyKey
+        val suffix = if (testCode != null) UUID.randomUUID().toString() else ""
 
-        //수정
-        Payment currentPayment = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT, null);
+        headers.set("Idempotency-Key", "$tossIdempotencyKey$suffix")
+        headers.set("Authorization", "Basic $encodedKey")
+        headers.contentType = MediaType.APPLICATION_JSON
 
-        // 2. 이미 성공한 요청이면 저장된 응답 반환
-        if (currentPayment.getStatus() == PaymentStatus.PAID) {
-            return paymentStatusService.parseResponse(currentPayment.getResponseBody());
-        }
-
-//        ConfirmRequest tossRequest = new ConfirmRequest(
-//                request.paymentKey(),
-//                currentPayment.getOrderNumber(), // 이 부분이 v1, v2 등으로 바뀜
-//                request.amount()
-//        );
-
-        String tossIdempotencyKey = currentPayment.getIdempotencyKey();
-        headers.set("Idempotency-Key", tossIdempotencyKey + (testCode != null ? UUID.randomUUID() : ""));
-        headers.set("Authorization", "Basic " + encodedKey);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<ConfirmRequest> entity = new HttpEntity<>(request, headers);
+        val entity = HttpEntity(request, headers)
 
         try {
-            ResponseEntity<TossConfirmResponse> response = restTemplate.postForEntity(TOSS_URL + "/confirm", entity, TossConfirmResponse.class);
-//            log.info("응답값 확인 {},{}",response,response.getBody());
-            // 성공 시 내 DB 업데이트
-            paymentStatusService.finalizeRecord(currentPayment, PaymentStatus.PAID, response.getBody());
-            return response.getBody();
-        } catch (HttpClientErrorException e) {
-            // 비즈니스 로직 에러 (4xx)
-            // 사용자의 잔액 부족, 카드 정보 오류 등
-            String errorBody = e.getResponseBodyAsString();
-//            log.info("에러 바디 확인: {}", errorBody); // 추가
-            //null을 전달하여 상태만 FAILED로 변경
-            paymentStatusService.finalizeRecord(currentPayment, PaymentStatus.FAILED, null);
-            handleBusinessError(e.getStatusCode(), errorBody);
-            throw e; // unreachable (예외가 던져짐)
+            // 자바 클래스 메타데이터 표현식 최적화 및 널 안정성 확보
+            val response = restTemplate.postForEntity(
+                "$tossUrl/confirm",
+                entity,
+                TossConfirmResponse::class.java
+            )
 
-        } catch (HttpServerErrorException e) {
-            // 시스템 및 서버 에러 (5xx)
-            // 토스 서버 장애, 은행 점검 등
-            String errorBody = e.getResponseBodyAsString();
-//            log.error("토스 시스템 에러 (5xx): {}",errorBody);
-            //토스 서버 문제이므로 FAILED 처리하여 나중에 다시 시도 가능하게 함
-            paymentStatusService.finalizeRecord(currentPayment, PaymentStatus.FAILED, null);
-            handleSystemError(e.getStatusCode(), errorBody);
-            throw e;
-
-        } catch (ResourceAccessException e) {
-            // [네트워크 에러] - 타임아웃, 커넥션 거부 등
-            //1. 재시도 로직
-            //2. WEBhook을 사용
-            //finalizeRecord를 호출하지 않음으로써 DB의 PENDING 상태를 그대로 유지
-//            log.error("네트워크 통신 실패: {}", e.getMessage());
-            paymentStatusService.markRecordAsUncertain(currentPayment);
-            throw e;
+            return response.body ?: throw BusinessException(ErrorCode.INTERNAL_SERVER_ERROR)
+        } catch (e: HttpClientErrorException) {
+            val errorBody = e.getResponseBodyAsString()
+            paymentStatusService.finalizeRecord(currentPayment, PaymentStatus.FAILED, null)
+            handleBusinessError(e.statusCode, errorBody)
+            throw e
+        } catch (e: HttpServerErrorException) {
+            val errorBody = e.getResponseBodyAsString()
+            paymentStatusService.finalizeRecord(currentPayment, PaymentStatus.FAILED, null)
+            handleSystemError(e.statusCode, errorBody)
+            throw e
+        } catch (e: ResourceAccessException) {
+            paymentStatusService.markRecordAsUncertain(currentPayment)
+            throw e
         }
     }
 
 
-    // 최종적으로 사용자에게 실패 응답을 던지거나,
+    // 최종적으로 사용자에게 실패 응답을 던지거나, 관리자 알림을 보냄
     @Recover
-    public TossConfirmResponse recover(ResourceAccessException e, ConfirmRequest request, String testCode) {
-        System.err.printf("[ERROR] 결제 승인 최종 실패 - 주문번호: %s, 에러: %s%n",
-                request.orderId, e.getMessage());
-        //todo 관리자에게 알람
+    fun recover(e: ResourceAccessException, request: ConfirmRequest, testCode: String?): TossConfirmResponse {
+        System.err.println("[ERROR] 결제 승인 최종 실패 - 주문번호: ${request.orderId}, 에러: ${e.message}")
+
+        // TODO: 관리자에게 알람 로직 구현
         // 네트워크 장애 시: "결제 확인 중" 상태로 변경하거나 관리자 알림
-        throw new BusinessException(ErrorCode.NETWORK_ERROR_FINAL_FAILED);
+
+        throw BusinessException(ErrorCode.NETWORK_ERROR_FINAL_FAILED)
     }
 
-    private void handleBusinessError(HttpStatusCode status, String errorBody) {
-        String errorCode = parseErrorCode(errorBody);
+    private fun handleBusinessError(status: HttpStatusCode, errorBody: String?) {
+        val errorCode = parseErrorCode(errorBody)
 
-//        log.error("토스페이먼츠 4xx 에러 발생 - Status: {}, Code: {}", status, errorCode);
-
-        //404
-        if (status.equals(HttpStatus.NOT_FOUND)) {
-            switch (errorCode) {
-                case "NOT_FOUND_PAYMENT":
-                    throw new BusinessException(NOT_FOUND_PAYMENT);
-                case "NOT_FOUND_PAYMENT_SESSION":
-                    throw new BusinessException(NOT_FOUND_PAYMENT_SESSION);
+        // 중첩 when 구조를 사용해 status와 errorCode를 철저하고 가독성 높게 매핑
+        when (status) {
+            HttpStatus.NOT_FOUND -> when (errorCode) {
+                "NOT_FOUND_PAYMENT" -> throw BusinessException(ErrorCode.NOT_FOUND_PAYMENT)
+                "NOT_FOUND_PAYMENT_SESSION" -> throw BusinessException(ErrorCode.NOT_FOUND_PAYMENT_SESSION)
+//                else -> throw BusinessException(HttpStatus.NOT_FOUND) // 정의되지 않은 404 기본 에러 처리
             }
-        }
 
-        // 403Forbidden: 권한이나 상태에 따른 거절
-        if (status.equals(HttpStatus.FORBIDDEN)) {
-            switch (errorCode) {
-                case "REJECT_ACCOUNT_PAYMENT":
-                    throw new BusinessException(REJECT_ACCOUNT_PAYMENT);
-                case "REJECT_CARD_PAYMENT":
-                    throw new BusinessException(REJECT_CARD_PAYMENT);
-                case "REJECT_CARD_COMPANY":
-                    throw new BusinessException(REJECT_CARD_COMPANY);
-                case "FORBIDDEN_REQUEST":
-                    throw new BusinessException(FORBIDDEN_REQUEST);
-                case "INVALID_PASSWORD":
-                    throw new BusinessException(INVALID_PASSWORD);
+            HttpStatus.FORBIDDEN -> when (errorCode) {
+                "REJECT_ACCOUNT_PAYMENT" -> throw BusinessException(ErrorCode.REJECT_ACCOUNT_PAYMENT)
+                "REJECT_CARD_PAYMENT" -> throw BusinessException(ErrorCode.REJECT_CARD_PAYMENT)
+                "REJECT_CARD_COMPANY" -> throw BusinessException(ErrorCode.REJECT_CARD_COMPANY)
+                "FORBIDDEN_REQUEST" -> throw BusinessException(ErrorCode.FORBIDDEN_REQUEST)
+                "INVALID_PASSWORD" -> throw BusinessException(ErrorCode.INVALID_PASSWORD)
+//                else -> throw BusinessException(ErrorCode.FORBIDDEN_REQUEST) // 정의되지 않은 403 기본 에러 처리
             }
-        }
 
-        // 400 Bad Request:
-        if (status.equals(HttpStatus.BAD_REQUEST)) {
-            switch (errorCode) {
-                case "ALREADY_PROCESSED_PAYMENT":
-                    throw new BusinessException(ALREADY_PROCESSED_PAYMENT);
-                case "INVALID_REQUEST":
-                    throw new BusinessException(INVALID_REQUEST);
-                case "INVALID_API_KEY":
-                    throw new BusinessException(INVALID_API_KEY);
-                case "INVALID_REJECT_CARD":
-                    throw new BusinessException(INVALID_REJECT_CARD);
-                case "INVALID_CARD_EXPIRATION":
-                    throw new BusinessException(INVALID_CARD_EXPIRATION);
-                case "INVALID_STOPPED_CARD":
-                    throw new BusinessException(INVALID_STOPPED_CARD);
-                case "INVALID_CARD_LOST_OR_STOLEN":
-                    throw new BusinessException(INVALID_CARD_LOST_OR_STOLEN);
-                case "INVALID_CARD_NUMBER":
-                    throw new BusinessException(INVALID_CARD_NUMBER);
-                case "INVALID_ACCOUNT_INFO_RE_REGISTER":
-                    throw new BusinessException(INVALID_ACCOUNT_INFO_RE_REGISTER);
-                case "UNAPPROVED_ORDER_ID":
-                    throw new BusinessException(UNAPPROVED_ORDER_ID);
+            HttpStatus.BAD_REQUEST -> when (errorCode) {
+                "ALREADY_PROCESSED_PAYMENT" -> throw BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT)
+                "INVALID_REQUEST" -> throw BusinessException(ErrorCode.INVALID_REQUEST)
+                "INVALID_API_KEY" -> throw BusinessException(ErrorCode.INVALID_API_KEY)
+                "INVALID_REJECT_CARD" -> throw BusinessException(ErrorCode.INVALID_REJECT_CARD)
+                "INVALID_CARD_EXPIRATION" -> throw BusinessException(ErrorCode.INVALID_CARD_EXPIRATION)
+                "INVALID_STOPPED_CARD" -> throw BusinessException(ErrorCode.INVALID_STOPPED_CARD)
+                "INVALID_CARD_LOST_OR_STOLEN" -> throw BusinessException(ErrorCode.INVALID_CARD_LOST_OR_STOLEN)
+                "INVALID_CARD_NUMBER" -> throw BusinessException(ErrorCode.INVALID_CARD_NUMBER)
+                "INVALID_ACCOUNT_INFO_RE_REGISTER" -> throw BusinessException(ErrorCode.INVALID_ACCOUNT_INFO_RE_REGISTER)
+                "UNAPPROVED_ORDER_ID" -> throw BusinessException(ErrorCode.UNAPPROVED_ORDER_ID)
+//                else -> throw BusinessException(ErrorCode.BAD_REQUEST) // 정의되지 않은 400 기본 에러 처리
             }
-        }
 
-    }
-
-    private void handleSystemError(HttpStatusCode status, String errorBody) {
-        // JSON 파싱을 통해 토스의 code와 message 추출
-        String errorCode = parseErrorCode(errorBody);
-
-//        log.error("토스페이먼츠 5xx 에러 발생 - Status: {}, Code: {}", status, errorCode);
-        //todo 관리자나 개발자에게 알람이 가는 로직
-
-        // 3. 토스 서버 및 은행 점검 문제 (500 계열)
-        if (status.is5xxServerError()) {
-            // 이 경우 트랜잭션을 롤백시켜 DB 주문 삭제를 막아야 함
-            switch (errorCode) {
-                case "FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING":
-                    throw new BusinessException(FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING);
-                case "UNKNOWN_PAYMENT_ERROR":
-                    throw new BusinessException(UNKNOWN_PAYMENT_ERROR);
-                case "FAILED_INTERNAL_SYSTEM_PROCESSING":
-                    throw new BusinessException(FAILED_INTERNAL_SYSTEM_PROCESSING);
-            }
+            else -> throw BusinessException(ErrorCode.INVALID_REQUEST) // 400, 403, 404 이외의 예외 처리 가드
         }
     }
 
-    private String parseErrorCode(String errorBody) {
-        try {
-            // 1. String 형태의 JSON을 JsonNode 객체로 읽는다.
-            JsonNode root = objectMapper.readTree(errorBody);
+    private fun handleSystemError(status: HttpStatusCode, errorBody: String?) {
+        val errorCode = parseErrorCode(errorBody)
 
-            // 2. "code" 필드의 값을 텍스트로 가져온다
-            return root.path("code").asText();
-        } catch (Exception e) {
-            // 파싱 실패 시 로깅 후 기본 에러 코드 반환
-//            log.error("토스 에러 응답 파싱 중 오류 발생: {}", e.getMessage());
-            return "UNKNOWN_ERROR";
+        // log.error("토스페이먼츠 5xx 에러 발생 - Status: $status, Code: $errorCode")
+        // TODO: 관리자나 개발자에게 알람이 가는 로직
+
+        // 3. 토스 서버 및 은행 점검 문제 (500 계열) 처리 철저화
+        if (!status.is5xxServerError) {
+            throw BusinessException(ErrorCode.INTERNAL_SERVER_ERROR) // 5xx가 아닌 경우 가드 분기
+        }
+
+        when (errorCode) {
+            "FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING" -> throw BusinessException(ErrorCode.FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING)
+            "UNKNOWN_PAYMENT_ERROR" -> throw BusinessException(ErrorCode.UNKNOWN_PAYMENT_ERROR)
+            "FAILED_INTERNAL_SYSTEM_PROCESSING" -> throw BusinessException(ErrorCode.FAILED_INTERNAL_SYSTEM_PROCESSING)
+            else -> throw BusinessException(ErrorCode.INTERNAL_SERVER_ERROR) // 정의되지 않은 5xx 기본 에러 처리
         }
     }
 
-    public OrderConfirmService(ObjectMapper objectMapper, RestTemplate restTemplate, PaymentStatusService paymentStatusService, OrderRepository orderRepository) {
-        this.objectMapper = objectMapper;
-        this.restTemplate = restTemplate;
-        this.paymentStatusService = paymentStatusService;
-        this.orderRepository = orderRepository;
+    private fun parseErrorCode(errorBody: String?): String {
+        // errorBody가 널이거나 비어있으면 즉시 기본 코드 반환 (가드 절)
+        if (errorBody.isNullOrBlank()) {
+            return "UNKNOWN_ERROR"
+        }
+
+        // 코틀린에서 try-catch는 '식(Expression)'이므로 반환값으로 바로 사용 가능
+        return try {
+            val root = objectMapper.readTree(errorBody)
+            root.path("code").asText("UNKNOWN_ERROR") // "code" 필드가 없을 때의 기본값 지정
+        } catch (e: Exception) {
+            "UNKNOWN_ERROR"
+        }
     }
 }
