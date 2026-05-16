@@ -16,16 +16,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ProductTest {
 
     private User createSeller() {
-        return User.builder()
-                .email("seller@test.com")
-                .password("1234")
-                .name("테스트판매자")
-                .nickname("seller1")
-                .phoneNumber("010-1234-5678")
-                .address("서울시")
-                .userStatus(UserStatus.ACTIVE)
-                .role(Role.SELLER)
-                .build();
+        return new User(
+                null,
+                "seller@test.com",
+                "1234",
+                "테스트판매자",
+                "seller1",
+                "010-1234-5678",
+                "서울시",
+                UserStatus.ACTIVE,
+                Role.SELLER,
+                null
+                );
     }
 
     @Test

@@ -11,6 +11,7 @@ import com.team10.backend.domain.user.entity.User;
 import com.team10.backend.domain.user.enums.DuplicateType;
 import com.team10.backend.domain.user.enums.Role;
 import com.team10.backend.domain.user.repository.UserRepository;
+import com.team10.backend.domain.user.unit.UserTestFixture;
 import com.team10.backend.global.exception.BusinessException;
 import com.team10.backend.global.exception.ErrorCode;
 import com.team10.backend.global.security.TokenProvider;
@@ -230,12 +231,7 @@ class AuthServiceTest {
         // given
         LoginRequest request = new LoginRequest("user@example.com", "password");
 
-        User user = User.builder()
-                        .email(request.email)
-                        .password("encodedPassword")
-                        .nickname("길동이")
-                        .role(Role.BUYER)
-                        .build();
+        User user = UserTestFixture.createBuyer();
 
         ReflectionTestUtils.setField(user, "id", 1L);
         given(this.userRepository.findByEmail(request.email)).willReturn(user);
@@ -259,12 +255,7 @@ class AuthServiceTest {
         // given
         LoginRequest request = new LoginRequest("user@example.com", "password");
 
-        User user = User.builder()
-                .email(request.email)
-                .password("encodedPassword")
-                .nickname("길동이")
-                .role(Role.BUYER)
-                .build();
+        User user = UserTestFixture.createBuyer();
 
         given(this.userRepository.findByEmail(request.email)).willReturn(user);
         given(passwordEncoder.matches(request.password, user.getPassword())).willReturn(false);
