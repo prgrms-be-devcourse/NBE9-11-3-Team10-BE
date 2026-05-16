@@ -22,8 +22,8 @@ data class CommentResponseDto(
             fun from(writer: User): Writer {
                 return Writer(
                     writer.getId(),
-                    writer.getNickname(),
-                    writer.getImageUrl()
+                    writer.nickname,
+                    writer.imageUrl
                 )
             }
         }

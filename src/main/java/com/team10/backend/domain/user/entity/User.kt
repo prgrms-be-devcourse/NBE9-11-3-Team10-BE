@@ -1,231 +1,104 @@
-package com.team10.backend.domain.user.entity;
+package com.team10.backend.domain.user.entity
 
-import com.team10.backend.domain.auth.dto.AuthRegisterRequest;
-import com.team10.backend.domain.user.dto.SellerUpdateRequest;
-import com.team10.backend.domain.user.enums.Role;
-import com.team10.backend.domain.user.enums.UserStatus;
-import com.team10.backend.global.entity.BaseEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import com.team10.backend.domain.auth.dto.AuthRegisterRequest
+import com.team10.backend.domain.user.enums.Role
+import com.team10.backend.domain.user.enums.UserStatus
+import com.team10.backend.global.entity.BaseEntity
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
 
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity {
-
+class User(
     @Column(name = "image_url")
-    private String imageUrl;
+    var imageUrl: String? = null,
 
     @Column(nullable = false, unique = true, length = 255)
-    private String email;
+    var email: String,
 
     @Column(nullable = false, length = 255)
-    private String password;
+    var password: String,
 
     @Column(nullable = false, length = 255)
-    private String name;
+    var name: String,
 
     @Column(nullable = false, unique = true, length = 255)
-    private String nickname;
+    var nickname: String,
 
     @Column(name = "phone_number", nullable = false, length = 255)
-    private String phoneNumber;
+    var phoneNumber: String,
 
     @Column(nullable = false, length = 255)
-    private String address;
+    var address: String,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_status", nullable = false)
-    private UserStatus userStatus;
+    var userStatus: UserStatus,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    var role: Role,
 
-    @OneToOne(mappedBy = "user",
-            orphanRemoval = true,
-            cascade = CascadeType.ALL)
-    private SellerInfo sellerInfo;
+    @OneToOne(
+    mappedBy = "user",
+    orphanRemoval = true,
+    cascade = [CascadeType.ALL]
+    )
+    var sellerInfo: SellerInfo? = null
+) : BaseEntity() {
 
-    public static User create(AuthRegisterRequest request,
-                              String hashedPassword,
-                              Role role
+    companion object {
+        // TODO : test 마이그레이션 후 제거 예정
+        @JvmStatic
+        fun create(
+            request: AuthRegisterRequest,
+            encodedPassword: String,
+            role: Role) = User(
+                email = request.email,
+                password = encodedPassword,
+                name = request.name,
+                nickname = request.nickname,
+                phoneNumber = request.phoneNumber,
+                address = request.address,
+                userStatus = UserStatus.ACTIVE,
+                role = role
+            )
+    }
+
+    fun attachSellerInfo(sellerInfo: SellerInfo) {
+        this.sellerInfo = sellerInfo
+        sellerInfo.linkUser(this)
+    }
+
+    fun updateUserInfo(
+        nickname: String,
+        phoneNumber: String,
+        address: String
     ) {
-        return User.builder()
-                .email(request.email)
-                .password(hashedPassword)
-                .name(request.name)
-                .nickname(request.nickname)
-                .phoneNumber(request.phoneNumber)
-                .address(request.address)
-                .userStatus(UserStatus.ACTIVE)
-                .role(role)
-                .build();
+        this.nickname = nickname
+        this.phoneNumber = phoneNumber
+        this.address = address
     }
 
-    public void attachSellerInfo(SellerInfo sellerInfo) {
-        this.sellerInfo = sellerInfo;
-        sellerInfo.linkUser(this);
+    fun updateSellerProfile(
+        nickname: String,
+        phoneNumber: String,
+        address: String,
+        bio: String?,
+        businessNumber: String?
+    ) {
+        val sellerInfo = requireNotNull(this.sellerInfo)
+
+        updateUserInfo(nickname, phoneNumber, address)
+        sellerInfo.updateSellerInfo(bio, businessNumber)
     }
 
-    public void updateUserInfo(String nickname, String phoneNumber, String address) {
-        this.nickname = nickname;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
-    }
-
-    public void updateSellerProfile(SellerUpdateRequest request) {
-        updateUserInfo(
-                request.nickname,
-                request.phoneNumber,
-                request.address
-        );
-
-        this.sellerInfo.updateSellerInfo(
-                request.bio,
-                request.businessNumber
-        );
-    }
-
-    public void updateProfileImage(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public String getImageUrl() {
-        return this.imageUrl;
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getNickname() {
-        return this.nickname;
-    }
-
-    public String getPhoneNumber() {
-        return this.phoneNumber;
-    }
-
-    public String getAddress() {
-        return this.address;
-    }
-
-    public UserStatus getUserStatus() {
-        return this.userStatus;
-    }
-
-    public Role getRole() {
-        return this.role;
-    }
-
-    public SellerInfo getSellerInfo() {
-        return this.sellerInfo;
-    }
-
-    public User(String imageUrl, String email, String password, String name, String nickname, String phoneNumber, String address, UserStatus userStatus, Role role, SellerInfo sellerInfo) {
-        this.imageUrl = imageUrl;
-        this.email = email;
-        this.password = password;
-        this.name = name;
-        this.nickname = nickname;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
-        this.userStatus = userStatus;
-        this.role = role;
-        this.sellerInfo = sellerInfo;
-    }
-
-    public User() {
-    }
-
-    public static class UserBuilder {
-        private String imageUrl;
-        private String email;
-        private String password;
-        private String name;
-        private String nickname;
-        private String phoneNumber;
-        private String address;
-        private UserStatus userStatus;
-        private Role role;
-        private SellerInfo sellerInfo;
-
-        UserBuilder() {
-        }
-
-        public UserBuilder imageUrl(String imageUrl) {
-            this.imageUrl = imageUrl;
-            return this;
-        }
-
-        public UserBuilder email(String email) {
-            this.email = email;
-            return this;
-        }
-
-        public UserBuilder password(String password) {
-            this.password = password;
-            return this;
-        }
-
-        public UserBuilder name(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public UserBuilder nickname(String nickname) {
-            this.nickname = nickname;
-            return this;
-        }
-
-        public UserBuilder phoneNumber(String phoneNumber) {
-            this.phoneNumber = phoneNumber;
-            return this;
-        }
-
-        public UserBuilder address(String address) {
-            this.address = address;
-            return this;
-        }
-
-        public UserBuilder userStatus(UserStatus userStatus) {
-            this.userStatus = userStatus;
-            return this;
-        }
-
-        public UserBuilder role(Role role) {
-            this.role = role;
-            return this;
-        }
-
-        public UserBuilder sellerInfo(SellerInfo sellerInfo) {
-            this.sellerInfo = sellerInfo;
-            return this;
-        }
-
-        public User build() {
-            return new User(this.imageUrl, this.email, this.password, this.name, this.nickname, this.phoneNumber, this.address, this.userStatus, this.role, this.sellerInfo);
-        }
-
-        public String toString() {
-            return "User.UserBuilder(imageUrl=" + this.imageUrl + ", email=" + this.email + ", password=" + this.password + ", name=" + this.name + ", nickname=" + this.nickname + ", phoneNumber=" + this.phoneNumber + ", address=" + this.address + ", userStatus=" + this.userStatus + ", role=" + this.role + ", sellerInfo=" + this.sellerInfo + ")";
-        }
-    }
-
-    public static UserBuilder builder() {
-        return new UserBuilder();
+    fun updateProfileImage(imageUrl: String?) {
+        this.imageUrl = imageUrl
     }
 }
