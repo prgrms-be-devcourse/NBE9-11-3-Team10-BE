@@ -32,13 +32,13 @@ data class CommentResponseDto(
     companion object {
         @JvmStatic
         fun from(comment: FeedComment, isLiked: Boolean, currentUser: User?): CommentResponseDto {
-            val isMine = currentUser != null && comment.getWriter().getId() == currentUser.getId()
+            val isMine = currentUser != null && comment.writer.id == currentUser.id
 
             return CommentResponseDto(
                 comment.getId(),
-                Writer.Companion.from(comment.getWriter()),
-                comment.getContent(),
-                comment.getLikeCount(),
+                Writer.from(comment.writer),
+                comment.content,
+                comment.likeCount,
                 isLiked,
                 isMine,
                 comment.getCreatedAt().toString(),

@@ -13,8 +13,8 @@ data class UpdateFeedResponseDto(
         fun from(feedPost: FeedPost): UpdateFeedResponseDto {
             return UpdateFeedResponseDto(
                 feedPost.getId(),
-                feedPost.getContent(),
-                feedPost.getImageUrl(),
+                feedPost.content,
+                feedPost.imageUrl,
                 feedPost.getUpdatedAt().toString()
             )
         }
