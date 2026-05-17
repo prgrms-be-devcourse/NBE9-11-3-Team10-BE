@@ -80,7 +80,7 @@ class FeedCommentService(
 
         val feedComment = getComment(commentId, feedId)
 
-        if (feedComment.getWriter().getId() != currentUser.getId()) {
+        if (feedComment.writer.id != currentUser.id) {
             throw BusinessException(ErrorCode.COMMENT_ACCESS_DENIED)
         }
 
@@ -126,7 +126,7 @@ class FeedCommentService(
 
         val liked = toggleLike(feedComment, currentUser)
 
-        return CommentLikeToggleResponseDto(liked, feedComment.getLikeCount())
+        return CommentLikeToggleResponseDto(liked, feedComment.likeCount)
     }
 
     private fun createPageable(page: Int, size: Int, sort: String): Pageable {
@@ -163,7 +163,7 @@ class FeedCommentService(
         val feedPost = feedPostRepository.findById(feedId)
             .orElseThrow { BusinessException(ErrorCode.FEED_NOT_FOUND) }
 
-        if (feedPost.getUser().getId() != sellerId) {
+        if (feedPost.user.id != sellerId) {
             throw BusinessException(ErrorCode.FEED_NOT_FOUND)
         }
 
@@ -189,8 +189,8 @@ class FeedCommentService(
     }
 
     private fun canDeleteComment(feedComment: FeedComment, feedPost: FeedPost, currentUser: User): Boolean {
-        val isCommentWriter = feedComment.getWriter().getId() == currentUser.getId()
-        val isFeedOwner = feedPost.getUser().getId() == currentUser.getId()
+        val isCommentWriter = feedComment.writer.id == currentUser.id
+        val isFeedOwner = feedPost.user.id == currentUser.id
         return isCommentWriter || isFeedOwner
     }
 

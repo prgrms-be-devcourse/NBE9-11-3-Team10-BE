@@ -88,14 +88,14 @@ class FeedPostService(
 
         val liked = toggleLike(feedPost, currentUser)
 
-        return FeedLikeToggleResponseDto(liked, feedPost.getLikeCount())
+        return FeedLikeToggleResponseDto(liked, feedPost.likeCount)
     }
 
     @Transactional // 작성자 본인의 피드만 삭제할 수 있다.
     fun deleteFeed(feedId: Long, currentUserId: Long) {
         val feedPost = getAuthorizedFeedPost(currentUserId, feedId)
 
-        imageUploadService.deleteIfManaged(feedPost.getImageUrl())
+        imageUploadService.deleteIfManaged(feedPost.imageUrl)
         feedPostRepository.delete(feedPost)
     }
 
@@ -109,7 +109,7 @@ class FeedPostService(
     private fun getAuthorizedFeedPost(userId: Long, feedId: Long): FeedPost {
         val feedPost = getFeedPost(feedId)
 
-        if (feedPost.getUser().getId() != userId) {
+        if (feedPost.user.id != userId) {
             throw BusinessException(ErrorCode.ACCESS_DENIED)
         }
 
@@ -148,8 +148,8 @@ class FeedPostService(
             return false
         }
 
-        return feed.getFeedLikes().any { like ->
-            like.getUser().getId() == currentUser.getId()
+        return feed.feedLikes.any { like ->
+            like.user.id == currentUser.id
         }
     }
 
