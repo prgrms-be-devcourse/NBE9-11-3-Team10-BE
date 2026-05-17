@@ -51,7 +51,7 @@ class ImageUploadServiceTest {
 
         ImageUploadResponse response = imageUploadService.upload(file, "products");
 
-        assertThat(response.imageUrl())
+        assertThat(response.imageUrl)
                 .startsWith("https://team10-images-dev-test.s3.ap-northeast-2.amazonaws.com/products/")
                 .endsWith(".jpg");
         verify(s3Client).putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class));
@@ -67,8 +67,8 @@ class ImageUploadServiceTest {
                 new PresignedUrlRequest("cake.jpg", "image/jpeg", "products")
         );
 
-        assertThat(response.uploadUrl()).isEqualTo("https://presigned-upload.test/upload");
-        assertThat(response.imageUrl())
+        assertThat(response.uploadUrl).isEqualTo("https://presigned-upload.test/upload");
+        assertThat(response.imageUrl)
                 .startsWith("https://team10-images-dev-test.s3.ap-northeast-2.amazonaws.com/products/")
                 .endsWith(".jpg");
         verify(s3Presigner).presignPutObject(any(PutObjectPresignRequest.class));
