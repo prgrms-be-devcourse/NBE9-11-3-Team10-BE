@@ -75,7 +75,11 @@ class PaymentStatusService(
     private fun handleExistingPayment(curPayment: Payment): Payment? {
         return when (curPayment.status) {
             PaymentStatus.PAID -> curPayment
-
+            PaymentStatus.READY -> {
+                // READY 상태인 경우 PENDING으로 변경 후 반환
+                curPayment.markAsPending()
+                curPayment
+            }
             PaymentStatus.UNCERTAIN -> {
                 // 네트워크 에러 등으로 상태가 불분명했던 경우:
                 // 토스 가이드에 따라 '동일한 Idempotency-Key'를 유지하며 재시도 (중복 결제 방지)
