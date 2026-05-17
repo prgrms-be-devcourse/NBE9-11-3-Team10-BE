@@ -1,9 +1,7 @@
 package com.team10.backend.domain.order.dto.search.seller
 
 import com.team10.backend.domain.order.entity.OrderProducts
-import com.team10.backend.domain.order.entity.Payment
 import java.time.LocalDateTime
-import java.util.function.Function
 
 data class SellerOrderSummaryResponse(
     @JvmField  val orderNumber: String,

@@ -46,5 +46,5 @@ data class AuthRegisterRequest(
 
         @JvmField
         @NotNull(message = "역할은 필수입니다.")
-        val role:  Role
+        val role: Role
 )

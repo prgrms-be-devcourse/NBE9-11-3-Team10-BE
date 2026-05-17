@@ -18,7 +18,10 @@ data class SellerResponse(
 ) {
     companion object {
         @JvmStatic
-        fun from(user: User) = SellerResponse(
+        fun from(user: User): SellerResponse {
+            val sellerInfo = requireNotNull(user.sellerInfo)
+
+            return SellerResponse(
                 user.id,
                 user.imageUrl,
                 user.email,
@@ -26,10 +29,11 @@ data class SellerResponse(
                 user.nickname,
                 user.phoneNumber,
                 user.address,
-                user.sellerInfo.bio,
-                user.sellerInfo.businessNumber,
+                sellerInfo.bio,
+                sellerInfo.businessNumber,
                 user.createdAt,
                 user.updatedAt
-        )
+            )
+        }
     }
 }
