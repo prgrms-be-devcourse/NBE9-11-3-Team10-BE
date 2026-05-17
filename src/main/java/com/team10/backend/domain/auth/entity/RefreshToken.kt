@@ -15,7 +15,7 @@ class RefreshToken(
 
     var expiresAt: LocalDateTime,
 
-    var isRevoked: Boolean,
+    var revoked: Boolean,
 
     @ManyToOne(fetch = FetchType.LAZY)
     var user: User
@@ -27,7 +27,7 @@ class RefreshToken(
     }
 
     fun revoke() {
-        this.isRevoked = true
+        this.revoked = true
     }
 
     companion object {
