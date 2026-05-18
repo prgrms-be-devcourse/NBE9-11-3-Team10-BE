@@ -47,7 +47,7 @@ class RefreshTokenService(
             ?: throw BusinessException(ErrorCode.INVALID_REFRESH_TOKEN)
 
         // 로그아웃 상태 || 이미 사용한 토큰 || 만료일이 지난 토큰
-        if (refreshToken.isRevoked || refreshToken.expiresAt.isBefore(LocalDateTime.now())) {
+        if (refreshToken.revoked || refreshToken.expiresAt.isBefore(LocalDateTime.now())) {
             throw BusinessException(ErrorCode.INVALID_REFRESH_TOKEN)
         }
 

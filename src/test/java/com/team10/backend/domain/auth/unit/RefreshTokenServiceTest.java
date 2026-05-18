@@ -71,7 +71,7 @@ public class RefreshTokenServiceTest {
         RefreshToken refreshToken = mock(RefreshToken.class);
 
         given(refreshToken.getUser()).willReturn(user);
-        given(refreshToken.isRevoked()).willReturn(false);
+        given(refreshToken.getRevoked()).willReturn(false);
         given(refreshToken.getExpiresAt()).willReturn(LocalDateTime.now().plusDays(1));
 
         given(refreshTokenRepository.findByToken("old-token"))
@@ -149,7 +149,7 @@ public class RefreshTokenServiceTest {
         // given
         RefreshToken refreshToken = mock(RefreshToken.class);
 
-        given(refreshToken.isRevoked()).willReturn(false);
+        given(refreshToken.getRevoked()).willReturn(false);
         given(refreshToken.getExpiresAt()).willReturn(LocalDateTime.now().minusDays(1));
 
         given(refreshTokenRepository.findByToken("token"))
