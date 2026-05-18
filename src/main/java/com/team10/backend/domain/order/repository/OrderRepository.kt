@@ -27,7 +27,7 @@ interface OrderRepository : JpaRepository<Order, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Order o WHERE o.orderNumber = :orderNumber")
-    fun findByOrderNumberWithPessimisticLock(@Param("orderNumber") orderNumber: String): Order
+    fun findByOrderNumberWithPessimisticLock(@Param("orderNumber") orderNumber: String): Order?
 
     fun countByUserAndOrderNumberStartingWith(user: User, prefix: String): Long
     fun findByUserAndOrderNumberContaining(user: User, keyword: String): Order?
