@@ -235,7 +235,6 @@ internal class ProductCommandControllerTest {
             .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
     }
 
-    // 테스트 헬퍼 메서드
     private fun saveSeller(): User {
         return userRepository.save(UserFixture.create(role = Role.SELLER))
     }
