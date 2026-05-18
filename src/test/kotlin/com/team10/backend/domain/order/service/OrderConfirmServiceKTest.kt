@@ -3,7 +3,6 @@ package com.team10.backend.domain.order.service
 import com.team10.backend.domain.order.dto.confirm.ConfirmRequest
 import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse
 import com.team10.backend.domain.order.enums.PaymentStatus
-import com.team10.backend.domain.order.enums.RequestType
 import com.team10.backend.domain.order.repository.OrderRepository
 import com.team10.backend.fixture.OrderFixture
 import com.team10.backend.fixture.PaymentFixture
