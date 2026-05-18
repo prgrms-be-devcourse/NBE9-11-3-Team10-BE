@@ -1,7 +1,5 @@
-package com.team10.backend.global.constant;
+package com.team10.backend.global.constant
 
-public final class JwtConstants {
-    private JwtConstants() {}
-
-    public static final String CLAIMS_ROLE = "role";
+object JwtConstants {
+    const val CLAIMS_ROLE: String = "role"
 }
