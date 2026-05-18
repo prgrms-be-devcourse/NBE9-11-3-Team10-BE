@@ -22,7 +22,7 @@ class SettlementDetail (
     @JoinColumn(name = "payment_id", nullable = false, unique = true)
     val payment: Payment,
 
-    @Column(name = "seller_id", nullable = false, insertable = false, updatable = false)
+    @Column(name = "seller_id", nullable = false, updatable = false)
     val sellerId: Long,
 
     @Column(name = "order_number", nullable = false)

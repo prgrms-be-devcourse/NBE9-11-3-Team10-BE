@@ -9,8 +9,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.time.LocalDate
-import java.util.*
+import java.time.LocalDateTime
 
 interface PaymentRepository : JpaRepository<Payment, Long> {
 
@@ -43,18 +42,21 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
 
     // 미정산 결제 건 탐색용 (배치용)
     @Query("""
-        SELECT p FROM Payment p
-        WHERE p.status = 'PAID'
-          AND p.order.user.id = :sellerId
-          AND p.createdAt BETWEEN :startDate AND :endDate
-          AND NOT EXISTS (
-              SELECT 1 FROM SettlementDetail sd 
-              WHERE sd.payment.id = p.id
-          )
-    """)
+    SELECT DISTINCT p FROM Payment p
+    JOIN p.order o
+    JOIN OrderProducts op ON op.order = o
+    JOIN Product prod ON prod = op.product
+    JOIN User u On u = prod.user
+    WHERE u.id = :sellerId
+      AND p.status = 'PAID'
+      AND p.createdAt BETWEEN :startDate AND :endDate
+      AND NOT EXISTS (
+        SELECT 1 FROM SettlementDetail sd WHERE sd.payment = p
+      )
+""")
     fun findUnsettledPaymentsBySellerAndPeriod(
         @Param("sellerId") sellerId: Long,
-        @Param("startDate") startDate: LocalDate,
-        @Param("endDate") endDate: LocalDate
+        @Param("startDate") startDate: LocalDateTime,
+        @Param("endDate") endDate: LocalDateTime
     ): List<Payment>
 }

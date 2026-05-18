@@ -6,6 +6,7 @@ import com.team10.backend.domain.settlement.entity.Settlement
 import com.team10.backend.domain.settlement.entity.SettlementDetail
 import com.team10.backend.domain.settlement.repository.SettlementRepository
 import com.team10.backend.domain.user.repository.UserRepository
+import jakarta.persistence.EntityManager
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -18,7 +19,8 @@ class SettlementBatchService(
     private val settlementRepository: SettlementRepository,
     private val userRepository: UserRepository,
     private val feeCalculator: FeeCalculator,
-    private val reconciliationService: SettlementReconciliationService
+    private val reconciliationService: SettlementReconciliationService,
+    private val entityManager: EntityManager? = null,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val CHUNK_SIZE = 100 // 대량 처리 시 메모리 관리용 청크 크기
@@ -46,9 +48,12 @@ class SettlementBatchService(
         val seller = userRepository.findById(sellerId)
             .orElseThrow { IllegalArgumentException("Seller not found: $sellerId") }
 
+        val periodStart = targetDate.atStartOfDay()
+        val periodEnd = targetDate.plusDays(1).atStartOfDay()
+
         // 3. 미정산 결제 건 조회 (청크 단위로 처리하기 위해 ID 기준 페이징 준비)
         val unsettledPayments = paymentRepository
-            .findUnsettledPaymentsBySellerAndPeriod(sellerId, targetDate, targetDate.plusDays(1))
+            .findUnsettledPaymentsBySellerAndPeriod(sellerId, periodStart, periodEnd)
 
         if (unsettledPayments.isEmpty()) {
             log.info("No unsettled payments found for seller=$sellerId, date=$targetDate")
@@ -126,6 +131,7 @@ class SettlementBatchService(
         // 8. 정산 상태 전이 및 저장
         settlement.markAsCalculated()
         val savedSettlement = settlementRepository.save(settlement)
+        entityManager?.flush()
 
         // 9. 결과 집계
         val netAmount = totalGross - totalFee - totalRefund
