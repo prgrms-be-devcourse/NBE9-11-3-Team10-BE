@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -266,7 +267,7 @@ class AuthServiceTest {
 
         assertEquals(ErrorCode.LOGIN_FAILED, ex.getErrorCode());
 
-        then(tokenProvider).should(never()).generateToken(any(), any());
+        then(tokenProvider).should(never()).generateToken(anyLong(), any(Role.class));
         then(refreshTokenService).should(never()).createRefreshToken(any());
     }
 

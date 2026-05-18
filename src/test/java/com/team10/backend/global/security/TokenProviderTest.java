@@ -100,8 +100,8 @@ public class TokenProviderTest {
         CustomUserPrincipal principal =
                 (CustomUserPrincipal) authentication.getPrincipal();
 
-        assertEquals(1L, principal.userId());
-        assertEquals(Role.BUYER, principal.role());
+        assertEquals(1L, principal.userId);
+        assertEquals(Role.BUYER, principal.role);
 
         assertEquals(1, authentication.getAuthorities().size());
         assertTrue(
