@@ -1,65 +1,63 @@
-package com.team10.backend.global.security;
+package com.team10.backend.global.security
 
-import com.team10.backend.domain.user.enums.Role;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import com.team10.backend.domain.user.enums.Role
+import com.team10.backend.global.constant.JwtConstants.CLAIMS_ROLE
+import io.jsonwebtoken.Claims
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.io.Decoders
+import io.jsonwebtoken.security.Keys
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import java.util.Date
+import javax.crypto.SecretKey
 
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.List;
+class TokenProvider(
+    secretKey: String,
+    private val expireTime: Long
+) {
+    private val key: SecretKey =
+        Keys.hmacShaKeyFor(
+            Decoders.BASE64.decode(secretKey)
+        )
 
-import static com.team10.backend.global.constant.JwtConstants.CLAIMS_ROLE;
-
-public class TokenProvider {
-
-    private final long expireTime;
-    private final SecretKey key;
-
-    public TokenProvider(String secretKey, long expireTime) {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.expireTime = expireTime;
-    }
-
-    public String generateToken(Long id, Role role) {
-        Date issuedAt = new Date();
-        Date expiresAt = calculateExpiresAt(issuedAt);
+    fun generateToken(id: Long, role: Role): String {
+        val issuedAt = Date()
+        val expiresAt = calculateExpiresAt(issuedAt)
 
         return Jwts.builder()
-                .subject(String.valueOf(id))
-                .claim(CLAIMS_ROLE, role)
-                .issuedAt(issuedAt)
-                .expiration(expiresAt)
-                .signWith(key)
-                .compact();
+            .subject(id.toString())
+            .claim(CLAIMS_ROLE, role)
+            .issuedAt(issuedAt)
+            .expiration(expiresAt)
+            .signWith(key)
+            .compact()
     }
 
-    private Date calculateExpiresAt(Date issuedAt) {
-        return new Date(issuedAt.getTime() + expireTime * 1000 * 60);
-    }
+    private fun calculateExpiresAt(issuedAt: Date): Date =
+        Date(issuedAt.time + expireTime * 1000 * 60)
 
-    public Claims parseClaims(String token) {
+    fun parseClaims(token: String): Claims {
         return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
     }
 
-    public Authentication getAuthentication(String token) {
-        Claims claims = parseClaims(token);
-        Long userId = Long.parseLong(claims.getSubject());
-        Role role = Role.valueOf(claims.get(CLAIMS_ROLE, String.class));
+    fun getAuthentication(token: String): Authentication {
+        val claims = parseClaims(token)
+        val userId = claims.subject.toLong()
+        val role = Role.valueOf(
+            claims.get(CLAIMS_ROLE, String::class.java)
+        )
 
-        return new UsernamePasswordAuthenticationToken(
-                new CustomUserPrincipal(userId, role),
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))
-        );
+        return UsernamePasswordAuthenticationToken(
+            CustomUserPrincipal(userId, role),
+            null,
+            listOf(
+                SimpleGrantedAuthority("ROLE_" + role.name)
+            )
+        )
     }
 }
