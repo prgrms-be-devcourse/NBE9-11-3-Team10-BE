@@ -20,6 +20,13 @@ import com.team10.backend.fixture.UserFixture
 import net.datafaker.Faker
 
 /**
+ * ⚠️ TEST ONLY - DO NOT USE IN PRODUCTION CODE
+ *
+ * 이 클래스는 테스트 환경에서만 사용됩니다.
+ * 운영 코드에서 직접 호출하면 안 됩니다.
+ */
+
+/**
  * 통합 테스트용 Order 생성 헬퍼
  * - 모든 의존 엔티티를 생성 + 저장 + 관계 설정까지 자동 처리
  * - 반환된 [OrderContext] 를 통해 테스트에서 필요한 엔티티 접근 가능

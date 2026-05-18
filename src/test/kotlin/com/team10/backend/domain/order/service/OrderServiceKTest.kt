@@ -40,7 +40,7 @@ class OrderServiceKTest {
         fun success() {
             // given
             val buyer = UserFixture.create()
-            val seller = UserFixture.create(role = com.team10.backend.domain.user.enums.Role.SELLER)
+            val seller = UserFixture.create(role = Role.SELLER)
             val product = ProductFixture.createSelling(user = seller, stock = 10)
 
             entityManager.persist(buyer)
@@ -65,7 +65,7 @@ class OrderServiceKTest {
         @DisplayName("예외: 존재하지 않는 유저 ID로 주문을 요청하면 USER_NOT_FOUND 예외가 발생한다.")
         fun throwExceptionWhenUserNotFound() {
             // given
-            val seller = UserFixture.create(role = com.team10.backend.domain.user.enums.Role.SELLER)
+            val seller = UserFixture.create(role = Role.SELLER)
             val product = ProductFixture.createSelling(user = seller, stock = 10)
 
             // 상품은 정상적으로 존재하게 만듬
@@ -114,7 +114,7 @@ class OrderServiceKTest {
         fun throwExceptionWhenStockIsInsufficient() {
             // given
             val buyer = UserFixture.create()
-            val seller = UserFixture.create(role = com.team10.backend.domain.user.enums.Role.SELLER)
+            val seller = UserFixture.create(role = Role.SELLER)
             val product = ProductFixture.createSelling(user = seller, stock = 5) // 재고 5개 설정
 
             entityManager.persist(buyer)
