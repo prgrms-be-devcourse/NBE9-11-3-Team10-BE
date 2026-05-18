@@ -1,5 +1,7 @@
 package com.team10.backend.fixture
 
+import com.team10.backend.domain.product.dto.ProductCreateRequest
+import com.team10.backend.domain.product.dto.ProductUpdateRequest
 import com.team10.backend.domain.product.entity.Product
 import com.team10.backend.domain.product.enums.ProductStatus
 import com.team10.backend.domain.product.enums.ProductType
@@ -31,10 +33,46 @@ object ProductFixture {
         description: String = faker.lorem().paragraph(2),
         price: Int = faker.number().numberBetween(1_000, 1_000_000),
         stock: Int = faker.number().numberBetween(1, 100),
-        imageUrl: String = faker.internet().url()
+        imageUrl: String? = faker.internet().url()
     ): Product {
         require(stock > 0) { "SELLING 상태 상품은 stock 이 1 이상이어야 합니다." }
         return Product(user, type, productName, description, price, stock, imageUrl)
+    }
+
+    fun createRequest(
+        productName: String = faker.commerce().productName(),
+        description: String = faker.lorem().paragraph(2),
+        price: Int = faker.number().numberBetween(1_000, 1_000_000),
+        stock: Int = faker.number().numberBetween(1, 100),
+        imageUrl: String? = faker.internet().url(),
+        type: ProductType = ProductType.BOOK
+    ): ProductCreateRequest {
+        return ProductCreateRequest(
+            productName = productName,
+            description = description,
+            price = price,
+            stock = stock,
+            imageUrl = imageUrl,
+            type = type
+        )
+    }
+
+    fun updateRequest(
+        productName: String = faker.commerce().productName(),
+        description: String = faker.lorem().paragraph(2),
+        price: Int = faker.number().numberBetween(1_000, 1_000_000),
+        imageUrl: String? = faker.internet().url(),
+        type: ProductType = ProductType.BOOK,
+        status: ProductStatus = ProductStatus.SELLING
+    ): ProductUpdateRequest {
+        return ProductUpdateRequest(
+            productName = productName,
+            description = description,
+            price = price,
+            imageUrl = imageUrl,
+            type = type,
+            status = status
+        )
     }
 
     /**
@@ -47,7 +85,7 @@ object ProductFixture {
         productName: String = faker.commerce().productName(),
         description: String = faker.lorem().paragraph(2),
         price: Int = faker.number().numberBetween(1_000, 1_000_000),
-        imageUrl: String = faker.internet().url()
+        imageUrl: String? = faker.internet().url()
     ): Product {
         // stock = 0 전달 → 생성자에서 자동 SOLD_OUT 전환
         return Product(user, type, productName, description, price, 0, imageUrl)
@@ -64,7 +102,7 @@ object ProductFixture {
         description: String = faker.lorem().paragraph(2),
         price: Int = faker.number().numberBetween(1_000, 1_000_000),
         stock: Int = faker.number().numberBetween(1, 100),
-        imageUrl: String = faker.internet().url()
+        imageUrl: String? = faker.internet().url()
     ): Product {
         val product = Product(user, type, productName, description, price, stock, imageUrl)
         product.inactivate() // 도메인 메서드 호출
