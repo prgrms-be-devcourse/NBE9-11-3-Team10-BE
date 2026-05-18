@@ -1,4 +1,4 @@
-package com.team10.backend.e2e_test.seed
+package com.team10.backend.e2e_test.seed.fixture
 
 import com.team10.backend.domain.product.entity.Product
 import com.team10.backend.domain.product.enums.ProductStatus

@@ -1,4 +1,4 @@
-package com.team10.backend.e2e_test.seed
+package com.team10.backend.e2e_test.seed.helper
 
 import com.team10.backend.domain.user.entity.SellerInfo
 import com.team10.backend.domain.user.repository.UserRepository
