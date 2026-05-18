@@ -22,6 +22,12 @@ interface SettlementRepository : JpaRepository<Settlement, Long> {
         periodEnd: LocalDate
     ): Settlement?
 
+    fun countBySellerIdAndPeriodStartAndPeriodEnd(
+        sellerId: Long,
+        periodStart: LocalDate,
+        periodEnd: LocalDate
+    ): Long
+
     // 정산 상태별 조회 (관리자용)
     fun findByStatusAndPeriodStartLessThanEqual(
         status: SettlementStatus,

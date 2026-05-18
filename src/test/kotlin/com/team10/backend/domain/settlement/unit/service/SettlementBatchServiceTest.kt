@@ -107,8 +107,10 @@ class SettlementBatchServiceTest {
             ) } returns true
             every { userRepository.findById(testSellerId) } returns Optional.of(testSeller)
             every { paymentRepository.findUnsettledPaymentsBySellerAndPeriod(
-                testSellerId, targetDate, targetDate.plusDays(1)
-            ) } returns emptyList()  // 결제 건 없음 시나리오
+                testSellerId,
+                targetDate.atStartOfDay(),
+                targetDate.plusDays(1).atStartOfDay()
+            ) } returns emptyList()
 
             // when
             val result = settlementBatchService.executeDailySettlement(
@@ -153,7 +155,9 @@ class SettlementBatchServiceTest {
             ) } returns false
             every { userRepository.findById(testSellerId) } returns Optional.of(testSeller)
             every { paymentRepository.findUnsettledPaymentsBySellerAndPeriod(
-                testSellerId, targetDate, targetDate.plusDays(1)
+                testSellerId,
+                targetDate.atStartOfDay(),
+                targetDate.plusDays(1).atStartOfDay()
             ) } returns emptyList()
 
             // when
@@ -185,7 +189,9 @@ class SettlementBatchServiceTest {
             ) } returns false
             every { userRepository.findById(testSellerId) } returns Optional.of(testSeller)
             every { paymentRepository.findUnsettledPaymentsBySellerAndPeriod(
-                testSellerId, targetDate, targetDate.plusDays(1)
+                testSellerId,
+                targetDate.atStartOfDay(),
+                targetDate.plusDays(1).atStartOfDay()
             ) } returns listOf(matchedPayment, unmatchedPayment)
 
             // Reconciliation 결과 목킹: 1 건 매칭, 1 건 불일치(금액 차이)
@@ -251,7 +257,9 @@ class SettlementBatchServiceTest {
             ) } returns false
             every { userRepository.findById(testSellerId) } returns Optional.of(testSeller)
             every { paymentRepository.findUnsettledPaymentsBySellerAndPeriod(
-                testSellerId, targetDate, targetDate.plusDays(1)
+                testSellerId,
+                targetDate.atStartOfDay(),
+                targetDate.plusDays(1).atStartOfDay()
             ) } returns payments
             every { reconciliationService.reconcileInternal(any(), any(), any()) } returns
                     ReconciliationInternalResult(
@@ -308,7 +316,9 @@ class SettlementBatchServiceTest {
             ) } returns false
             every { userRepository.findById(testSellerId) } returns Optional.of(testSeller)
             every { paymentRepository.findUnsettledPaymentsBySellerAndPeriod(
-                testSellerId, targetDate, targetDate.plusDays(1)
+                testSellerId,
+                targetDate.atStartOfDay(),
+                targetDate.plusDays(1).atStartOfDay()
             ) } returns listOf(goodPayment, badPayment)
             every { reconciliationService.reconcileInternal(any(), any(), any()) } returns
                     ReconciliationInternalResult(
@@ -357,7 +367,9 @@ class SettlementBatchServiceTest {
             ) } returns false
             every { userRepository.findById(testSellerId) } returns Optional.of(testSeller)
             every { paymentRepository.findUnsettledPaymentsBySellerAndPeriod(
-                testSellerId, targetDate, targetDate.plusDays(1)
+                testSellerId,
+                targetDate.atStartOfDay(),
+                targetDate.plusDays(1).atStartOfDay()
             ) } returns listOf(matchedPayment, unmatchedPayment)
 
             // Reconciliation: 1 건 매칭, 1 건 불일치 (금액 차이)
