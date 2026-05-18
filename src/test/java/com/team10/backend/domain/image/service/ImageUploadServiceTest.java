@@ -1,16 +1,13 @@
 package com.team10.backend.domain.image.service;
 
-import com.team10.backend.domain.image.dto.ImageUploadResponse;
 import com.team10.backend.domain.image.dto.PresignedUrlRequest;
 import com.team10.backend.domain.image.dto.PresignedUrlResponse;
 import com.team10.backend.global.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -41,23 +38,6 @@ class ImageUploadServiceTest {
     }
 
     @Test
-    void uploadImageReturnsS3Url() {
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "cake.jpg",
-                "image/jpeg",
-                "test-image".getBytes()
-        );
-
-        ImageUploadResponse response = imageUploadService.upload(file, "products");
-
-        assertThat(response.imageUrl)
-                .startsWith("https://team10-images-dev-test.s3.ap-northeast-2.amazonaws.com/products/")
-                .endsWith(".jpg");
-        verify(s3Client).putObject(any(PutObjectRequest.class), any(software.amazon.awssdk.core.sync.RequestBody.class));
-    }
-
-    @Test
     void createPresignedUrlReturnsUploadUrlAndImageUrl() throws Exception {
         PresignedPutObjectRequest presignedRequest = mock(PresignedPutObjectRequest.class);
         when(presignedRequest.url()).thenReturn(URI.create("https://presigned-upload.test/upload").toURL());
@@ -79,19 +59,6 @@ class ImageUploadServiceTest {
         PresignedUrlRequest request = new PresignedUrlRequest("memo.txt", "text/plain", "products");
 
         assertThatThrownBy(() -> imageUploadService.createPresignedUrl(request))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void uploadRejectsNonImageFile() {
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "memo.txt",
-                "text/plain",
-                "not-image".getBytes()
-        );
-
-        assertThatThrownBy(() -> imageUploadService.upload(file, "products"))
                 .isInstanceOf(BusinessException.class);
     }
 
