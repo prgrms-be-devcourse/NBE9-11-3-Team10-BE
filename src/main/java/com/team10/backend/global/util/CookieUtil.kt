@@ -1,47 +1,46 @@
-package com.team10.backend.global.util;
+package com.team10.backend.global.util
 
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.stereotype.Component;
+import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.stereotype.Component
 
 @Component
-public class CookieUtil {
-
-    public void addCookie(HttpServletResponse response, String name, String value) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setDomain("localhost");
-        cookie.setSecure(true);
-        cookie.setAttribute("SameSite", "Strict");
-
-        response.addCookie(cookie);
-    }
-
-    public String getCookieValue(HttpServletRequest request, String name) {
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies == null) return null;
-
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(name)) {
-                return cookie.getValue();
-            }
+class CookieUtil {
+    fun addCookie(
+        response: HttpServletResponse,
+        name: String,
+        value: String
+    ) {
+        val cookie = Cookie(name, value).apply {
+            path = "/"
+            isHttpOnly = true
+            domain = "localhost"
+            secure = true
+            setAttribute("SameSite", "Strict")
         }
-
-        return null;
+        response.addCookie(cookie)
     }
 
-    public void deleteCookie(HttpServletResponse response, String name) {
-        Cookie cookie = new Cookie(name, "");
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setDomain("localhost");
-        cookie.setMaxAge(0);
-        cookie.setSecure(true);
+    fun getCookieValue(
+        request: HttpServletRequest,
+        name: String
+    ): String? =
+        request.cookies
+                    ?.find { it.name == name }
+                    ?.value
 
-        response.addCookie(cookie);
+    fun deleteCookie(
+        response: HttpServletResponse,
+        name: String
+    ) {
+        val cookie = Cookie(name, "").apply {
+            path = "/"
+            isHttpOnly = true
+            domain = "localhost"
+            maxAge = 0
+            secure = true
+        }
+        response.addCookie(cookie)
     }
-
 }
