@@ -5,7 +5,7 @@ import com.team10.backend.domain.auth.entity.RefreshToken;
 import com.team10.backend.domain.auth.repository.RefreshTokenRepository;
 import com.team10.backend.domain.auth.service.RefreshTokenService;
 import com.team10.backend.domain.user.entity.User;
-import com.team10.backend.domain.user.enums.Role;
+import com.team10.backend.domain.user.unit.UserTestFixture;
 import com.team10.backend.global.exception.BusinessException;
 import com.team10.backend.global.exception.ErrorCode;
 import com.team10.backend.global.security.TokenProvider;
@@ -44,9 +44,7 @@ public class RefreshTokenServiceTest {
     @DisplayName("refreshToken 생성 성공")
     void createRefreshToken_success() {
         // given
-        User user = User.builder()
-                .role(Role.BUYER)
-                .build();
+        User user = UserTestFixture.createBuyer();
 
         RefreshToken savedToken = mock(RefreshToken.class);
 
@@ -68,14 +66,12 @@ public class RefreshTokenServiceTest {
     @DisplayName("토큰 재발급 성공")
     void refresh_success() {
         // given
-        User user = User.builder()
-                .role(Role.BUYER)
-                .build();
+        User user = UserTestFixture.createBuyer();
 
         RefreshToken refreshToken = mock(RefreshToken.class);
 
         given(refreshToken.getUser()).willReturn(user);
-        given(refreshToken.isRevoked()).willReturn(false);
+        given(refreshToken.getRevoked()).willReturn(false);
         given(refreshToken.getExpiresAt()).willReturn(LocalDateTime.now().plusDays(1));
 
         given(refreshTokenRepository.findByToken("old-token"))
@@ -130,9 +126,7 @@ public class RefreshTokenServiceTest {
     @DisplayName("폐기된 토큰인 경우(isRevoked = true)")
     void refresh_fail_revoked_token() {
         // given
-        User user = User.builder()
-                .role(Role.BUYER)
-                .build();
+        User user = UserTestFixture.createBuyer();
 
         RefreshToken refreshToken = RefreshToken.create("token", user);
         refreshToken.revoke();
@@ -155,7 +149,7 @@ public class RefreshTokenServiceTest {
         // given
         RefreshToken refreshToken = mock(RefreshToken.class);
 
-        given(refreshToken.isRevoked()).willReturn(false);
+        given(refreshToken.getRevoked()).willReturn(false);
         given(refreshToken.getExpiresAt()).willReturn(LocalDateTime.now().minusDays(1));
 
         given(refreshTokenRepository.findByToken("token"))

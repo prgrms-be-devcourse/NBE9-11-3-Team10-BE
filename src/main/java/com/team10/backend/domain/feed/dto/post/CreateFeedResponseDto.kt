@@ -12,8 +12,8 @@ data class CreateFeedResponseDto(
         fun from(feedPost: FeedPost): CreateFeedResponseDto {
             return CreateFeedResponseDto(
                 feedPost.getId(),
-                feedPost.getContent(),
-                feedPost.getImageUrl(),
+                feedPost.content,
+                feedPost.imageUrl,
                 feedPost.getCreatedAt().toString()
             )
         }

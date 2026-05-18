@@ -6,16 +6,18 @@ data class SellerPublicResponse(
     val imageUrl: String?,
     val name: String,
     val nickname: String,
-    val bio: String
+    val bio: String?
 ) {
     companion object {
         @JvmStatic
         fun from(user: User): SellerPublicResponse {
+            val sellerInfo = requireNotNull(user.sellerInfo)
+
             return SellerPublicResponse(
                 user.imageUrl,
                 user.name,
                 user.nickname,
-                user.sellerInfo.bio
+                sellerInfo.bio
             )
         }
     }

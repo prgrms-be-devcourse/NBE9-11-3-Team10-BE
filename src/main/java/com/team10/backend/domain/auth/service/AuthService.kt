@@ -29,7 +29,7 @@ class AuthService(
     fun register(request: AuthRegisterRequest): AuthRegisterResponse {
         validateDuplicateUser(request)
 
-        val encodedPassword = passwordEncoder.encode(request.password)
+        val encodedPassword = requireNotNull(passwordEncoder.encode(request.password))
         val role = request.role
         val user = User.create(request, encodedPassword, role)
 
@@ -77,7 +77,7 @@ class AuthService(
 
     private fun authenticate(request: LoginRequest): User {
         val user = userRepository.findByEmail(request.email)
-            .orElseThrow { BusinessException(ErrorCode.LOGIN_FAILED) }
+            ?: throw BusinessException(ErrorCode.LOGIN_FAILED)
 
         if (!passwordEncoder.matches(request.password,user.password)) {
             throw BusinessException(ErrorCode.LOGIN_FAILED)

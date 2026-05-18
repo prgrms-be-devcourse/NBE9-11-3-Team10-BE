@@ -53,7 +53,13 @@ class UserService(
         val user = getUserEntity(id)
         validateSellerRole(user)
 
-        user.updateSellerProfile(request)
+        user.updateSellerProfile(
+            request.nickname,
+            request.phoneNumber,
+            request.address,
+            request.bio,
+            request.businessNumber
+        )
 
         return SellerResponse.from(user)
     }

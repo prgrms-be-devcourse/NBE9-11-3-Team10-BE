@@ -28,18 +28,18 @@ object UserFixture {
         imageUrl: String? = faker.internet().url(),
         sellerInfo: SellerInfo? = null
     ): User {
-        return User.builder()
-            .email(email)
-            .password(password)
-            .name(name)
-            .nickname(nickname)
-            .phoneNumber(phoneNumber)
-            .address(address)
-            .userStatus(userStatus)
-            .role(role)
-            .imageUrl(imageUrl)
-            .sellerInfo(sellerInfo)
-            .build()
+        return User(
+            email = email,
+            password = password,
+            name = name,
+            nickname = nickname,
+            phoneNumber = phoneNumber,
+            address = address,
+            userStatus = userStatus,
+            role = role,
+            imageUrl = imageUrl,
+            sellerInfo = sellerInfo
+        )
     }
 
     /**

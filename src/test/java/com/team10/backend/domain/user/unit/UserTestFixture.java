@@ -9,29 +9,33 @@ import java.util.UUID;
 
 public class UserTestFixture {
     public static User createBuyer() {
-        return User.builder()
-                .email("buyer" + UUID.randomUUID() + "@test.com")
-                .password("password123!")
-                .name("김구매")
-                .nickname("buyer")
-                .phoneNumber("010-0000-0000")
-                .address("서울시 동대문구")
-                .userStatus(UserStatus.ACTIVE)
-                .role(Role.BUYER)
-                .build();
+        return new User(
+                null,
+                "buyer" + UUID.randomUUID() + "@test.com",
+                "password123!",
+                "김구매",
+                "buyer",
+                "010-0000-0000",
+                "서울시 동대문구",
+                UserStatus.ACTIVE,
+                Role.BUYER,
+                null
+        );
     }
 
     public static User createSeller() {
-        User user = User.builder()
-                .email("seller" + UUID.randomUUID() + "@test.com")
-                .password("password123!")
-                .name("송판매")
-                .nickname("seller")
-                .phoneNumber("010-1111-1111")
-                .address("서울시 동대문구")
-                .userStatus(UserStatus.ACTIVE)
-                .role(Role.SELLER)
-                .build();
+        User user = new User(
+                null,
+                "seller" + UUID.randomUUID() + "@test.com",
+                "password123!",
+                "송판매",
+                "seller",
+                "010-1111-1111",
+                "서울시 동대문구",
+                UserStatus.ACTIVE,
+                Role.SELLER,
+                null
+                );
         SellerInfo sellerInfo = new SellerInfo();
         sellerInfo.updateSellerInfo("안녕하세요", "123-123-12345");
         user.attachSellerInfo(sellerInfo);

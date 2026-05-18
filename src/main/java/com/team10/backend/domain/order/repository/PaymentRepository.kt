@@ -6,6 +6,7 @@ import com.team10.backend.domain.order.enums.RequestType
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
@@ -29,6 +30,15 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
     fun findAllByOrderOrderByCreatedAtAsc(order: Order): List<Payment>
 
     fun findByOrderNumberAndType(orderNumber: String, type: RequestType): Payment?
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Payment p 
+        SET p.status = com.team10.backend.domain.order.enums.PaymentStatus.PENDING 
+        WHERE p.id = :id 
+          AND p.status = com.team10.backend.domain.order.enums.PaymentStatus.UNCERTAIN
+    """)
+    fun updateStatusFromUncertainToPending(@Param("id") id: Long): Int
 
     // 미정산 결제 건 탐색용 (배치용)
     @Query("""

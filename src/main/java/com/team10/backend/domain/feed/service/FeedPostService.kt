@@ -1,7 +1,13 @@
 package com.team10.backend.domain.feed.service
 
-import com.team10.backend.domain.feed.dto.post.*
+import com.team10.backend.domain.feed.dto.post.CreateFeedRequestDto
+import com.team10.backend.domain.feed.dto.post.FeedDto
 import com.team10.backend.domain.feed.dto.post.FeedDto.Companion.from
+import com.team10.backend.domain.feed.dto.post.FeedLikeToggleResponseDto
+import com.team10.backend.domain.feed.dto.post.FeedListResponseDto
+import com.team10.backend.domain.feed.dto.post.FeedResponseDto
+import com.team10.backend.domain.feed.dto.post.UpdateFeedRequestDto
+import com.team10.backend.domain.feed.dto.post.UpdateFeedResponseDto
 import com.team10.backend.domain.feed.entity.FeedLike
 import com.team10.backend.domain.feed.entity.FeedPost
 import com.team10.backend.domain.feed.repository.FeedLikeRepository
@@ -62,7 +68,7 @@ class FeedPostService(
     ): UpdateFeedResponseDto {
         val feedPost = getAuthorizedFeedPost(currentUserId, feedId)
 
-        val oldImageUrl = feedPost.getImageUrl()
+        val oldImageUrl = feedPost.imageUrl
 
         val newImageUrl = requestDto.imageUrl
 
@@ -82,14 +88,14 @@ class FeedPostService(
 
         val liked = toggleLike(feedPost, currentUser)
 
-        return FeedLikeToggleResponseDto(liked, feedPost.getLikeCount())
+        return FeedLikeToggleResponseDto(liked, feedPost.likeCount)
     }
 
     @Transactional // 작성자 본인의 피드만 삭제할 수 있다.
     fun deleteFeed(feedId: Long, currentUserId: Long) {
         val feedPost = getAuthorizedFeedPost(currentUserId, feedId)
 
-        imageUploadService.deleteIfManaged(feedPost.getImageUrl())
+        imageUploadService.deleteIfManaged(feedPost.imageUrl)
         feedPostRepository.delete(feedPost)
     }
 
@@ -103,7 +109,7 @@ class FeedPostService(
     private fun getAuthorizedFeedPost(userId: Long, feedId: Long): FeedPost {
         val feedPost = getFeedPost(feedId)
 
-        if (feedPost.getUser().getId() != userId) {
+        if (feedPost.user.id != userId) {
             throw BusinessException(ErrorCode.ACCESS_DENIED)
         }
 
@@ -125,7 +131,7 @@ class FeedPostService(
     // 피드 생성은 판매자 권한이 필요하다.
     private fun validateSeller(user: User) {
 
-        if (user.getRole() != Role.SELLER) {
+        if (user.role != Role.SELLER) {
             throw BusinessException(ErrorCode.ACCESS_DENIED)
         }
     }
@@ -142,8 +148,8 @@ class FeedPostService(
             return false
         }
 
-        return feed.getFeedLikes().any { like ->
-            like.getUser().getId() == currentUser.getId()
+        return feed.feedLikes.any { like ->
+            like.user.id == currentUser.id
         }
     }
 
