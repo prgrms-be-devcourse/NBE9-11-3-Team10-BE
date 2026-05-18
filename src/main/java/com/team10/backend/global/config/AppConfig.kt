@@ -1,21 +1,18 @@
-package com.team10.backend.global.config;
+package com.team10.backend.global.config
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.web.client.RestTemplate
 
 @Configuration
-public class AppConfig {
+class AppConfig {
+    @Bean
+    fun passwordEncoder(): PasswordEncoder =
+        BCryptPasswordEncoder()
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+    fun restTemplate(): RestTemplate =
+        RestTemplate()
 }
