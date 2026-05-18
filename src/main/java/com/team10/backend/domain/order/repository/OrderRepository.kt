@@ -1,12 +1,12 @@
 package com.team10.backend.domain.order.repository
 
 import com.team10.backend.domain.order.entity.Order
+import com.team10.backend.domain.user.entity.User
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.util.*
 
 interface OrderRepository : JpaRepository<Order, Long> {
 
@@ -27,5 +27,8 @@ interface OrderRepository : JpaRepository<Order, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Order o WHERE o.orderNumber = :orderNumber")
-    fun findByOrderNumberWithPessimisticLock(@Param("orderNumber") orderNumber: String): Order?
+    fun findByOrderNumberWithPessimisticLock(@Param("orderNumber") orderNumber: String): Order
+
+    fun countByUserAndOrderNumberStartingWith(user: User, prefix: String): Long
+    fun findByUserAndOrderNumberContaining(user: User, keyword: String): Order?
 }
