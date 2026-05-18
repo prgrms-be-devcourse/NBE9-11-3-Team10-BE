@@ -28,11 +28,13 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
+import software.amazon.awssdk.core.internal.waiters.ResponseOrException.exception
 
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
 internal class ProductServiceTest {
+
     @Autowired
     lateinit var productService: ProductService
 
@@ -269,102 +271,58 @@ internal class ProductServiceTest {
         assertThat(exception.errorCode).isEqualTo(ErrorCode.ACCESS_DENIED)
     }
 
-//    @Test
-//    @DisplayName("상품 비활성화 성공")
-//    fun inactiveProduct_success() {
-//        val user = userRepository!!.findById(1L).orElseThrow()
-//
-//        val savedProduct = productRepository!!.save<Product>(
-//            Product(
-//                user,
-//                ProductType.BOOK,
-//                "비활성화 대상 상품",
-//                "상품 설명",
-//                10000,
-//                10,
-//                "https://example.com/book.jpg"
-//            )
-//        )
-//
-//        val response = productService!!.inactive(1L, savedProduct.getId())
-//
-//        Assertions.assertThat(response.productId).isEqualTo(savedProduct.getId())
-//        Assertions.assertThat<ProductStatus>(response.status).isEqualTo(ProductStatus.INACTIVE)
-//        Assertions.assertThat(response.message).isEqualTo("상품이 삭제되었습니다.")
-//
-//        val product = productRepository.findById(savedProduct.getId()).orElseThrow()
-//        Assertions.assertThat<ProductStatus>(product.status).isEqualTo(ProductStatus.INACTIVE)
-//    }
-//
-//    @Test
-//    @DisplayName("이미 비활성화된 상품 재요청 시, 예외 발생")
-//    fun inactiveProduct_fail_alreadyInactive() {
-//        val user = userRepository!!.findById(1L).orElseThrow()
-//
-//        val savedProduct = productRepository!!.save<Product>(
-//            Product(
-//                user,
-//                ProductType.BOOK,
-//                "이미 비활성화된 상품",
-//                "상품 설명",
-//                10000,
-//                10,
-//                "https://example.com/book.jpg"
-//            )
-//        )
-//
-//        savedProduct.inactivate()
-//
-//        AssertionsForClassTypes.assertThatThrownBy(ThrowableAssert.ThrowingCallable {
-//            productService!!.inactive(
-//                1L,
-//                savedProduct.getId()
-//            )
-//        })
-//            .isInstanceOf(BusinessException::class.java)
-//            .hasMessage(ErrorCode.PRODUCT_ALREADY_INACTIVE.getMessage())
-//    }
-//
-//    @Test
-//    @DisplayName("존재하지 않는 상품 비활성화 시, 예외 발생")
-//    fun inactiveProduct_fail_productNotFound() {
-//        AssertionsForClassTypes.assertThatThrownBy(ThrowableAssert.ThrowingCallable {
-//            productService!!.inactive(
-//                1L,
-//                9999L
-//            )
-//        })
-//            .isInstanceOf(BusinessException::class.java)
-//            .hasMessage(ErrorCode.PRODUCT_NOT_FOUND.getMessage())
-//    }
-//
-//    @Test
-//    @DisplayName("본인 상품이 아닌 상품 비활성화 시, 예외 발생")
-//    fun inactiveProduct_fail_accessDenied() {
-//        val owner = userRepository!!.findById(1L).orElseThrow()
-//
-//        val savedProduct = productRepository!!.save<Product>(
-//            Product(
-//                owner,
-//                ProductType.BOOK,
-//                "비활성화 대상 상품",
-//                "상품 설명",
-//                10000,
-//                10,
-//                "https://example.com/book.jpg"
-//            )
-//        )
-//
-//        AssertionsForClassTypes.assertThatThrownBy(ThrowableAssert.ThrowingCallable {
-//            productService!!.inactive(
-//                2L,
-//                savedProduct.getId()
-//            )
-//        })
-//            .isInstanceOf(BusinessException::class.java)
-//            .hasMessage(ErrorCode.ACCESS_DENIED.getMessage())
-//    }
-//
+    @Test
+    @DisplayName("상품 비활성화 성공")
+    fun inactiveProduct_success() {
+        val seller = saveSeller()
+        val savedProduct = saveProduct(ProductFixture.createSelling(user = seller))
+
+        val response = productService.inactive(seller.id, savedProduct.id)
+
+        assertThat(response.productId).isEqualTo(savedProduct.id)
+        assertThat(response.status).isEqualTo(ProductStatus.INACTIVE)
+        assertThat(response.message).isEqualTo("상품이 삭제되었습니다.")
+    }
+
+    @Test
+    @DisplayName("이미 비활성화된 상품 재요청 시, 예외 발생")
+    fun inactiveProduct_fail_alreadyInactive() {
+        val seller = saveSeller()
+        val savedProduct = saveProduct(ProductFixture.createInactive(user = seller))
+
+        val exception = assertThrows<BusinessException> {
+            productService.inactive(seller.id, savedProduct.id)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.PRODUCT_ALREADY_INACTIVE)
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품 비활성화 시, 예외 발생")
+    fun inactiveProduct_fail_productNotFound() {
+        val seller = saveSeller()
+
+        val exception = assertThrows<BusinessException> {
+            productService.inactive(seller.id, NOT_FOUND_ID)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.PRODUCT_NOT_FOUND)
+    }
+
+    @Test
+    @DisplayName("본인 상품이 아닌 상품 비활성화 시, 예외 발생")
+    fun inactiveProduct_fail_accessDenied() {
+        val owner = saveSeller()
+        val anotherSeller = saveSeller()
+        val savedProduct = saveProduct(ProductFixture.createSelling(user = owner))
+
+        val exception = assertThrows<BusinessException> {
+            productService.inactive(anotherSeller.id, savedProduct.id)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.ACCESS_DENIED)
+    }
+
 //    @Test
 //    @DisplayName("재고 수정 성공")
 //    fun updateStock_success() {
