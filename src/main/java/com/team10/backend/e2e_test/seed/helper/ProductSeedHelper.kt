@@ -1,8 +1,9 @@
-package com.team10.backend.e2e_test.seed
+package com.team10.backend.e2e_test.seed.helper
 import com.team10.backend.domain.product.entity.Product
 import com.team10.backend.domain.product.repository.ProductRepository
 import com.team10.backend.domain.user.enums.Role
 import com.team10.backend.domain.user.repository.UserRepository
+import com.team10.backend.e2e_test.seed.fixture.ProductSeedFixture
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
