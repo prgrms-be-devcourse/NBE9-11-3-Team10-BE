@@ -1,6 +1,7 @@
 package com.team10.backend.domain.product.service
 
 import com.team10.backend.domain.image.service.ImageUploadService
+import com.team10.backend.domain.product.dto.ProductUpdateRequest
 import com.team10.backend.domain.product.entity.Product
 import com.team10.backend.domain.product.enums.ProductStatus
 import com.team10.backend.domain.product.enums.ProductType
@@ -13,9 +14,15 @@ import com.team10.backend.fixture.UserFixture
 import com.team10.backend.global.exception.BusinessException
 import com.team10.backend.global.exception.ErrorCode
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.AssertionsForClassTypes
+import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.Mockito
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -169,171 +176,99 @@ internal class ProductServiceTest {
         assertThat(exception.errorCode).isEqualTo(ErrorCode.PRODUCT_NOT_FOUND)
     }
 
-//    @Test
-//    @DisplayName("상품 수정 성공")
-//    fun updateProduct_success() {
-//        val user = userRepository!!.findById(1L).orElseThrow()
-//
-//        val savedProduct = productRepository!!.save<Product>(
-//            Product(
-//                user,
-//                ProductType.BOOK,
-//                "기존 상품명",
-//                "기존 설명",
-//                10000,
-//                10,
-//                "https://example.com/old.jpg"
-//            )
-//        )
-//
-//        val request = ProductUpdateRequest(
-//            "수정된 상품명",
-//            "수정된 설명",
-//            12000,
-//            "https://example.com/new.jpg",
-//            ProductType.EBOOK,
-//            ProductStatus.SOLD_OUT
-//        )
-//
-//        val response = productService!!.update(1L, savedProduct.getId(), request)
-//
-//        Assertions.assertThat(response.productId).isEqualTo(savedProduct.getId())
-//        Assertions.assertThat(response.productName).isEqualTo("수정된 상품명")
-//        Assertions.assertThat(response.description).isEqualTo("수정된 설명")
-//        Assertions.assertThat(response.price).isEqualTo(12000)
-//        Assertions.assertThat(response.imageUrl).isEqualTo("https://example.com/new.jpg")
-//        Assertions.assertThat<ProductType>(response.type).isEqualTo(ProductType.EBOOK)
-//        Assertions.assertThat<ProductStatus>(response.status).isEqualTo(ProductStatus.SOLD_OUT)
-//        Mockito.verify<ImageUploadService?>(imageUploadService).deleteIfManaged("https://example.com/old.jpg")
-//    }
-//
-//    @Test
-//    @DisplayName("상품 수정 시 imageUrl이 null이면 상품 이미지 삭제 - 성공")
-//    fun updateProduct_deleteImageWhenImageUrlIsNull_success() {
-//        val user = userRepository!!.findById(1L).orElseThrow()
-//
-//        val savedProduct = productRepository!!.save<Product>(
-//            Product(
-//                user,
-//                ProductType.BOOK,
-//                "기존 상품명",
-//                "기존 설명",
-//                10000,
-//                10,
-//                "https://example.com/old.jpg"
-//            )
-//        )
-//
-//        val request = ProductUpdateRequest(
-//            "수정된 상품명",
-//            "수정된 설명",
-//            12000,
-//            null,
-//            ProductType.EBOOK,
-//            ProductStatus.SELLING
-//        )
-//
-//        val response = productService!!.update(1L, savedProduct.getId(), request)
-//
-//        Assertions.assertThat(response.productId).isEqualTo(savedProduct.getId())
-//        Assertions.assertThat(response.imageUrl).isNull()
-//        Mockito.verify<ImageUploadService?>(imageUploadService).deleteIfManaged("https://example.com/old.jpg")
-//    }
-//
-//    @Test
-//    @DisplayName("상품 수정 시 imageUrl이 같으면 기존 이미지 삭제하지 않음")
-//    fun updateProduct_skipImageDeleteWhenImageUrlIsSame_success() {
-//        val user = userRepository!!.findById(1L).orElseThrow()
-//
-//        val savedProduct = productRepository!!.save<Product>(
-//            Product(
-//                user,
-//                ProductType.BOOK,
-//                "기존 상품명",
-//                "기존 설명",
-//                10000,
-//                10,
-//                "https://example.com/same.jpg"
-//            )
-//        )
-//
-//        val request = ProductUpdateRequest(
-//            "수정된 상품명",
-//            "수정된 설명",
-//            12000,
-//            "https://example.com/same.jpg",
-//            ProductType.EBOOK,
-//            ProductStatus.SELLING
-//        )
-//
-//        val response = productService!!.update(1L, savedProduct.getId(), request)
-//
-//        Assertions.assertThat(response.productId).isEqualTo(savedProduct.getId())
-//        Assertions.assertThat(response.imageUrl).isEqualTo("https://example.com/same.jpg")
-//        Mockito.verify<ImageUploadService?>(imageUploadService, Mockito.never())
-//            .deleteIfManaged("https://example.com/same.jpg")
-//    }
-//
-//    @Test
-//    @DisplayName("존재하지 않는 상품 수정 시, 예외 발생")
-//    fun updateProduct_fail_productNotFound() {
-//        val request = ProductUpdateRequest(
-//            "수정된 상품명",
-//            "수정된 설명",
-//            12000,
-//            "https://example.com/new.jpg",
-//            ProductType.BOOK,
-//            ProductStatus.SELLING
-//        )
-//
-//        AssertionsForClassTypes.assertThatThrownBy(ThrowableAssert.ThrowingCallable {
-//            productService!!.update(
-//                1L,
-//                9999L,
-//                request
-//            )
-//        })
-//            .isInstanceOf(BusinessException::class.java)
-//            .hasMessage(ErrorCode.PRODUCT_NOT_FOUND.getMessage())
-//    }
-//
-//    @Test
-//    @DisplayName("본인 상품이 아닌 상품 수정 시, 예외 발생")
-//    fun updateProduct_fail_accessDenied() {
-//        val owner = userRepository!!.findById(1L).orElseThrow()
-//
-//        val savedProduct = productRepository!!.save<Product>(
-//            Product(
-//                owner,
-//                ProductType.BOOK,
-//                "기존 상품명",
-//                "기존 설명",
-//                10000,
-//                10,
-//                "https://example.com/old.jpg"
-//            )
-//        )
-//
-//        val request = ProductUpdateRequest(
-//            "수정된 상품명",
-//            "수정된 설명",
-//            12000,
-//            "https://example.com/new.jpg",
-//            ProductType.EBOOK,
-//            ProductStatus.SELLING
-//        )
-//
-//        AssertionsForClassTypes.assertThatThrownBy(ThrowableAssert.ThrowingCallable {
-//            productService!!.update(
-//                2L,
-//                savedProduct.getId(),
-//                request
-//            )
-//        })
-//            .isInstanceOf(BusinessException::class.java)
-//            .hasMessage(ErrorCode.ACCESS_DENIED.getMessage())
-//    }
-//
+    @Test
+    @DisplayName("상품 수정 성공")
+    fun updateProduct_success() {
+        val seller = saveSeller()
+        val oldImageUrl = "https://example.com/old.jpg"
+        val savedProduct = saveProduct(
+            ProductFixture.createSelling(
+                user = seller,
+                imageUrl = oldImageUrl
+            )
+        )
+        val request = ProductFixture.updateRequest()
+
+        val response = productService.update(seller.id, savedProduct.id, request)
+
+        assertThat(response.productId).isEqualTo(savedProduct.id)
+        assertThat(response.productName).isEqualTo(request.productName)
+        assertThat(response.description).isEqualTo(request.description)
+        assertThat(response.price).isEqualTo(request.price)
+        assertThat(response.imageUrl).isEqualTo(request.imageUrl)
+        assertThat(response.type).isEqualTo(request.type)
+        assertThat(response.status).isEqualTo(request.status)
+        verify(imageUploadService).deleteIfManaged(oldImageUrl)
+    }
+
+    @Test
+    @DisplayName("상품 수정 시 이미지를 제거하면 기존 이미지 삭제 성공")
+    fun updateProduct_deleteImageWhenImageUrlIsNull_success() {
+        val seller = saveSeller()
+        val oldImageUrl = "https://example.com/old.jpg"
+        val savedProduct = saveProduct(
+            ProductFixture.createSelling(
+                user = seller,
+                imageUrl = oldImageUrl
+            )
+        )
+        val request = ProductFixture.updateRequest(imageUrl = null)
+
+        val response = productService.update(seller.id, savedProduct.id, request)
+
+        assertThat(response.productId).isEqualTo(savedProduct.id)
+        assertThat(response.imageUrl).isNull()
+        verify(imageUploadService).deleteIfManaged(oldImageUrl)
+    }
+
+    @Test
+    @DisplayName("상품 수정 시 imageUrl이 같으면 기존 이미지 삭제하지 않음")
+    fun updateProduct_skipImageDeleteWhenImageUrlIsSame_success() {
+        val seller = saveSeller()
+        val sameImageUrl = "https://example.com/same.jpg"
+        val savedProduct = saveProduct(
+            ProductFixture.createSelling(
+                user = seller,
+                imageUrl = sameImageUrl
+            )
+        )
+        val request = ProductFixture.updateRequest(imageUrl = sameImageUrl)
+
+        val response = productService.update(seller.id, savedProduct.id, request)
+
+        assertThat(response.productId).isEqualTo(savedProduct.id)
+        assertThat(response.imageUrl).isEqualTo(sameImageUrl)
+        verify(imageUploadService, never()).deleteIfManaged(sameImageUrl)
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 상품 수정 시, 예외 발생")
+    fun updateProduct_fail_productNotFound() {
+        val seller = saveSeller()
+        val request = ProductFixture.updateRequest()
+
+        val exception = assertThrows<BusinessException> {
+            productService.update(seller.id, NOT_FOUND_ID, request)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.PRODUCT_NOT_FOUND)
+    }
+
+    @Test
+    @DisplayName("본인 상품이 아닌 상품을 수정 시, 예외 발생")
+    fun updateProduct_fail_accessDenied() {
+        val owner = saveSeller()
+        val anotherSeller = saveSeller()
+        val savedProduct = saveProduct(ProductFixture.createSelling(user = owner))
+        val request = ProductFixture.updateRequest()
+
+        val exception = assertThrows<BusinessException> {
+            productService.update(anotherSeller.id, savedProduct.id, request)
+        }
+
+        assertThat(exception.errorCode).isEqualTo(ErrorCode.ACCESS_DENIED)
+    }
+
 //    @Test
 //    @DisplayName("상품 비활성화 성공")
 //    fun inactiveProduct_success() {
