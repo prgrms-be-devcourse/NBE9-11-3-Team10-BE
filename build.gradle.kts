@@ -74,6 +74,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.14.9")  // Kotlin 친화적 목킹 라이브러리
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 
     // 📌 DataFaker
     implementation("net.datafaker:datafaker:2.5.4")
