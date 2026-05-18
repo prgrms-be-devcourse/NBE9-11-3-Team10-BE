@@ -7,17 +7,16 @@ data class SellerResponse(
     val id: Long,
     val imageUrl: String?,
     val email: String,
-    @JvmField val name: String,
-    @JvmField val nickname: String,
+    val name: String,
+    val nickname: String,
     val phoneNumber: String,
-    @JvmField val address: String,
-    @JvmField val bio: String?,
-    @JvmField val businessNumber: String?,
+    val address: String,
+    val bio: String?,
+    val businessNumber: String?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(user: User): SellerResponse {
             val sellerInfo = requireNotNull(user.sellerInfo)
 
