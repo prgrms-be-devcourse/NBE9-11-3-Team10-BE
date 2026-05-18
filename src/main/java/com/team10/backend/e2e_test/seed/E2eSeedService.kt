@@ -1,6 +1,5 @@
 package com.team10.backend.e2e_test.seed
 
-import com.team10.backend.domain.user.repository.UserRepository
 import jakarta.persistence.EntityManager
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -10,9 +9,9 @@ import org.springframework.transaction.annotation.Transactional
 @ConditionalOnProperty(name = ["test.e2e.enabled"], havingValue = "true")
 class E2eSeedService(
     private val entityManager: EntityManager,
-    private val userRepository: UserRepository,
     private val userSeedFixture: UserSeedFixture,
-    private val storeProfileSeedHelper: StoreProfileSeedHelper
+    private val storeProfileSeedHelper: StoreProfileSeedHelper,
+    private val productSeedHelper: ProductSeedHelper
 ) {
 
     /**
@@ -25,8 +24,10 @@ class E2eSeedService(
     fun resetAndSeed() {
         truncateAllTables()
         resetIdentitySequences()
-        seedTestUsers()
-        seedStoreProfiles()
+
+        userSeedFixture.seedAll()
+        storeProfileSeedHelper.seedSellerProfiles()
+        productSeedHelper.seedSellerProducts()
     }
 
     private fun truncateAllTables() {
