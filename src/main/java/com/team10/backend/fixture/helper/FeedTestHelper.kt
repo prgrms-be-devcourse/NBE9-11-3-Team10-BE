@@ -16,6 +16,13 @@ import com.team10.backend.fixture.UserFixture
 import net.datafaker.Faker
 
 /**
+ * ⚠️ TEST ONLY - DO NOT USE IN PRODUCTION CODE
+ *
+ * 이 클래스는 테스트 환경에서만 사용됩니다.
+ * 운영 코드에서 직접 호출하면 안 됩니다.
+ */
+
+/**
  * 통합 테스트용 Feed 생성 헬퍼
  * - User → Post → Comment/Like → CommentLike 순서로 저장 및 관계 동기화
  * - 반환된 [FeedContext] 를 통해 테스트에서 필요한 엔티티 접근 가능
@@ -126,12 +133,12 @@ class FeedTestHelper(
 class FeedBuilderHelper(
     private val helper: FeedTestHelper
 ) {
-    private var author: com.team10.backend.domain.user.entity.User? = null
+    private var author: User? = null
     private var commentCount = 2
     private var likeCount = 3
     private var commentLikeCount = 1
 
-    fun author(author: com.team10.backend.domain.user.entity.User) = apply { this.author = author }
+    fun author(author: User) = apply { this.author = author }
     fun comments(count: Int) = apply { this.commentCount = count }
     fun likes(count: Int) = apply { this.likeCount = count }
     fun commentLikes(count: Int) = apply { this.commentLikeCount = count }

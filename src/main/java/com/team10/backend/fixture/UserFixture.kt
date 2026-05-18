@@ -7,6 +7,13 @@ import com.team10.backend.domain.user.enums.Role
 import com.team10.backend.domain.user.enums.UserStatus
 import net.datafaker.Faker
 
+/**
+ * ⚠️ TEST ONLY - DO NOT USE IN PRODUCTION CODE
+ *
+ * 이 클래스는 테스트 환경에서만 사용됩니다.
+ * 운영 코드에서 직접 호출하면 안 됩니다.
+ */
+
 object UserFixture {
     // 한국어 기반 더미 데이터가 필요하면 Faker(Locale("ko")) 권장
     private val faker = Faker()

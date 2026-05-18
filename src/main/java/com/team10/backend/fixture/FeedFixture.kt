@@ -7,6 +7,13 @@ import com.team10.backend.domain.feed.entity.FeedPost
 import com.team10.backend.domain.user.entity.User
 import net.datafaker.Faker
 
+/**
+ * ⚠️ TEST ONLY - DO NOT USE IN PRODUCTION CODE
+ *
+ * 이 클래스는 테스트 환경에서만 사용됩니다.
+ * 운영 코드에서 직접 호출하면 안 됩니다.
+ */
+
 object FeedFixture {
     private val faker = Faker()
 

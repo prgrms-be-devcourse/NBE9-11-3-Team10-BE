@@ -8,7 +8,15 @@ import com.team10.backend.domain.user.entity.User
 import com.team10.backend.domain.user.enums.Role
 import net.datafaker.Faker
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
+
+/**
+ * ⚠️ TEST ONLY - DO NOT USE IN PRODUCTION CODE
+ *
+ * 이 클래스는 테스트 환경에서만 사용됩니다.
+ * 운영 코드에서 직접 호출하면 안 됩니다.
+ */
 
 object OrderFixture {
     private val faker = Faker()
@@ -92,7 +100,7 @@ object OrderFixture {
      * - DB unique 제약조건 충돌 방지
      */
     fun generateUniqueOrderNumber(): String {
-        val timestamp = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
         val uuid = UUID.randomUUID().toString().take(8)
         return "$ORDER_NUMBER_PREFIX-$timestamp-$uuid"
     }
