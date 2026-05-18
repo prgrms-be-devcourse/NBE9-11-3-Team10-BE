@@ -30,7 +30,7 @@ class E2eTestController(
                 "resetAt" to LocalDateTime.now().toString(),
                 "stores" to listOf(
                     "StoreProfileStore", "ProductStore", "FeedStore",
-                    "CommentStore", "FeaturedProductStore", "OrderStore", "PaymentScenarioStore"
+                    "CommentStore", "OrderStore"
                 )
             )
             return ResponseEntity.ok(response)

@@ -26,4 +26,5 @@ interface ProductRepository : JpaRepository<Product, Long>, JpaSpecificationExec
 
     fun countByUserAndProductNameIn(user: User, names: List<String>): Long
     fun findByProductName(name: String): Product?
+    fun findByUserAndProductNameIn(user: User, names: Collection<String>): List<Product>
 }

@@ -1,9 +1,6 @@
 package com.team10.backend.e2e_test.seed
 
-import com.team10.backend.e2e_test.seed.helper.FeedSeedHelper
-import com.team10.backend.e2e_test.seed.helper.ProductSeedHelper
-import com.team10.backend.e2e_test.seed.helper.StoreProfileSeedHelper
-import com.team10.backend.e2e_test.seed.helper.UserSeedHelper
+import com.team10.backend.e2e_test.seed.helper.*
 import jakarta.persistence.EntityManager
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -16,7 +13,8 @@ class E2eSeedService(
     private val userSeedHelper: UserSeedHelper,
     private val storeProfileSeedHelper: StoreProfileSeedHelper,
     private val productSeedHelper: ProductSeedHelper,
-    private val feedSeedHelper: FeedSeedHelper
+    private val feedSeedHelper: FeedSeedHelper,
+    private val orderSeedHelper: OrderSeedHelper
 ) {
 
     /**
@@ -34,6 +32,7 @@ class E2eSeedService(
         storeProfileSeedHelper.seedSellerProfiles()
         productSeedHelper.seedSellerProducts()
         feedSeedHelper.seedSellerFeeds()
+        orderSeedHelper.seedBuyerOrders()
     }
 
     private fun truncateAllTables() {
