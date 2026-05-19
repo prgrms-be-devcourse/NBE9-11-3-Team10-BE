@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 data class FeedDto(
     val id: Long,
     val imageUrl: String?,
-    @JvmField val content: String,
+    val content: String,
     val likeCount: Int,
     val commentCount: Int,
     val isLiked: Boolean,  // 현재 로그인한 유저가 좋아요를 눌렀는지 여부
@@ -14,7 +14,6 @@ data class FeedDto(
     val createdAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(feed: FeedPost, isLiked: Boolean): FeedDto {
             return FeedDto(
                 feed.getId(),
@@ -29,4 +28,3 @@ data class FeedDto(
         }
     }
 }
-
