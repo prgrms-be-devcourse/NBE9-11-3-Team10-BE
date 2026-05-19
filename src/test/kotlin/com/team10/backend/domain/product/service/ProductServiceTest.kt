@@ -437,7 +437,6 @@ internal class ProductServiceTest {
         assertThat(exception.errorCode).isEqualTo(ErrorCode.INVALID_STOCK)
     }
 
-    // 테스트 헬퍼 메서드
     private fun saveSeller(nickname: String? = null): User {
         val seller = if (nickname == null) {
             UserFixture.create(role = Role.SELLER)
