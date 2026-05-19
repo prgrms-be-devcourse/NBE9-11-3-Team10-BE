@@ -1,7 +1,6 @@
 package com.team10.backend.domain.order.service
 
 import com.team10.backend.domain.order.dto.OrderCreateRequest
-import com.team10.backend.domain.order.dto.OrderCreateRequest.OrderProductReq
 import com.team10.backend.domain.order.dto.OrderResponse
 import com.team10.backend.domain.order.dto.cancel.CancelRequest
 import com.team10.backend.domain.order.dto.search.OrderDetailResponse
@@ -16,7 +15,6 @@ import com.team10.backend.domain.order.enums.DeliveryStatus
 import com.team10.backend.domain.order.enums.PaymentStatus
 import com.team10.backend.domain.order.repository.OrderProductRepository
 import com.team10.backend.domain.order.repository.OrderRepository
-import com.team10.backend.domain.product.entity.Product
 import com.team10.backend.domain.product.repository.ProductRepository
 import com.team10.backend.domain.user.entity.User
 import com.team10.backend.domain.user.enums.Role
@@ -26,11 +24,8 @@ import com.team10.backend.global.exception.ErrorCode
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
-import java.util.*
-import java.util.function.Consumer
-import java.util.function.Supplier
 import org.springframework.data.repository.findByIdOrNull
-import kotlin.jvm.optionals.getOrNull
+import java.util.UUID
 
 @Service
 class OrderService(
@@ -40,8 +35,8 @@ class OrderService(
     private val orderProductRepository: OrderProductRepository
 //    private val RefundService : RefundService
 ) {
-
-
+    // 사전 재고 검증용 메서드
+    // 주문 생성에서는 동시성 보장을 위해 원자적 UPDATE 결과로 재고 부족 여부를 판단하여 현재 사용하지 않는다.
     fun validateStockAvailability(request: OrderCreateRequest) {
         for (productReq in request.orderProducts) {
             // 1. findByIdOrNull과 엘비스 연산자를 사용해 Null 안전성 확보 및 !! 제거
@@ -57,30 +52,27 @@ class OrderService(
 
     @Transactional
     fun createOrder(userId: Long, req: OrderCreateRequest): OrderResponse {
-        // 1. 재고 먼저 확인 (조기 예외 발생)
-        validateStockAvailability(req)
-
-        // 2. 주문자 조회 (findUser에서 유효한 User 객체 반환)
+        // 1. 주문자 조회 (findUser에서 유효한 User 객체 반환)
         val user = findUser(userId)
 
-        // 3. 배송 정보 엔티티 생성
+        // 2. 배송 정보 엔티티 생성
         val delivery = deliveryInfo(req)
 
-        // 4. 주문 상품(OrderProducts) 리스트 생성
+        // 3. 주문 상품(OrderProducts) 리스트 생성
         val orderProductsList = getOrderProductList(req)
 
-        // 5. 토스페이먼츠 호환 주문 번호 생성 (문자열 템플릿 사용)
+        // 4. 토스페이먼츠 호환 주문 번호 생성 (문자열 템플릿 사용)
         val todayDate = LocalDate.now().toString().replace("-", "")
         val uuidSnippet = UUID.randomUUID().toString().substring(0, 8)
         val orderNumber = "ORD-$todayDate-$uuidSnippet"
 
-        // 6. 최종적으로 주문 생성
+        // 5. 최종적으로 주문 생성
         val order = Order.createOrder(user, orderNumber, delivery, orderProductsList)
 
-        // 7. 영속화 (CascadeType.ALL로 연관 엔티티 함께 저장)
+        // 6. 영속화 (CascadeType.ALL로 연관 엔티티 함께 저장)
         orderRepository.save(order)
 
-        // 8. 응답 DTO 변환 및 반환
+        // 7. 응답 DTO 변환 및 반환
         return OrderResponse.from(order)
     }
 
@@ -100,15 +92,22 @@ class OrderService(
     }
 
 
-    //order-product테이블에 상품id, 상품 수량, 상품 가격을 넣는다.
+    // 주문 상품 생성에 필요한 상품 정보를 조회하고, 재고 차감은 원자적 UPDATE로 처리
     fun getOrderProductList(request: OrderCreateRequest): List<OrderProducts> {
         return request.orderProducts.map { productReq ->
-            // 1. 비관적 락으로 Optional<Product> 조회 후 null로 변환하여 엘비스 연산자 처리
-            val product = productRepository.findByIdWithPessimisticLock(productReq.productId).getOrNull()
-                ?: throw BusinessException(ErrorCode.PRODUCT_NOT_FOUND, "상품을 찾을 수 없습니다. ID: ${productReq.productId}")
+            // 1. 주문 상품 생성에 필요한 상품 가격 정보를 조회
+            val product = productRepository.findById(productReq.productId).orElseThrow {
+                BusinessException(ErrorCode.PRODUCT_NOT_FOUND, "상품을 찾을 수 없습니다. ID: ${productReq.productId}")
+            }
+            // 2. 재고 부족 검증과 차감을 하나의 UPDATE 문으로 원자적으로 처리
+            val updatedCount = productRepository.decreaseStockAtomically(
+                productReq.productId,
+                productReq.quantity
+            )
 
-            // 2. 재고 감소 로직 실행
-            product.decreaseStock(productReq.quantity)
+            if (updatedCount == 0) {
+                throw BusinessException(ErrorCode.INSUFFICIENT_STOCK)
+            }
 
             // 3. 빌더 대신 주 생성자로 안전하게 객체 생성
             OrderProducts(
@@ -181,6 +180,7 @@ class OrderService(
                     throw BusinessException(ErrorCode.ACCESS_DENIED)
                 }
             }
+
             Role.SELLER -> {
                 // 판매자라면: orderProducts 중 '내 상품'이 하나라도 포함되어 있는지 확인
                 val isSellerOfThisOrder = order.orderProducts.any { op ->
@@ -235,6 +235,7 @@ class OrderService(
             DeliveryStatus.COMPLETED -> {
                 throw BusinessException(ErrorCode.CANNOT_CANCEL_SHIPPING_ORDER)
             }
+
             else -> {
                 // READY 등 취소가 가능한 상태일 때는 아무것도 하지 않고 통과
             }
@@ -262,10 +263,12 @@ class OrderService(
                 // 결제 완료(PAID) 상태도 재고 복구가 필요하므로 아래 복구 로직 함수 호출
                 restoreStock(order)
             }
+
             PaymentStatus.READY -> {
                 // [결제 대기인 경우]: 결제 전이므로 환불 없이 재고만 복구
                 restoreStock(order)
             }
+
             else -> {
                 // FAILED, PENDING 등 재고 복구나 환불이 필요 없는 상태일 때는 아무것도 하지 않음
             }
@@ -275,17 +278,17 @@ class OrderService(
     // 재고 복구 공통 로직
     private fun restoreStock(order: Order) {
         for (orderProduct in order.orderProducts) {
-            // 비관적 락 조회 후
-            val product = productRepository.findByIdWithPessimisticLock(orderProduct.product.id).getOrNull()
-                ?: throw BusinessException(
+            val updatedCount = productRepository.increaseStockAtomically(
+                orderProduct.product.id,
+                orderProduct.quantity
+            )
+
+            if (updatedCount == 0) {
+                throw BusinessException(
                     ErrorCode.PRODUCT_NOT_FOUND,
                     "상품을 찾을 수 없습니다. ID: ${orderProduct.product.id}"
                 )
-
-            // 재고 증가 후 즉시 반영
-            product.increaseStock(orderProduct.quantity)
-            productRepository.saveAndFlush(product)
+            }
         }
     }
-
 }
