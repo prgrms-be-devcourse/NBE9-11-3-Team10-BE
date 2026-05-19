@@ -157,7 +157,7 @@ class ProductService(
 
     private fun getAuthorizedProductWithLock(userId: Long, productId: Long): Product {
         val product = productRepository.findByIdWithPessimisticLock(productId)
-            .orElseThrow { BusinessException(ErrorCode.PRODUCT_NOT_FOUND) }
+            ?: throw BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
 
         if (product.user.id != userId) {
             throw BusinessException(ErrorCode.ACCESS_DENIED)

@@ -89,16 +89,19 @@ class PaymentUpdateService(
         }
 
         if (expired == "EXPIRED") {
-            //데드락 방지를 위해 상품 ID 기준으로 정렬된 리스트
+            // 여러 주문 상품의 재고 복구 순서를 일관되게 유지하기 위해 상품 ID 기준으로 정렬
             val sortedOrderProducts = order.orderProducts.sortedBy { it.product.id }
 
-            // 1. 데드락 방지 순서에 따라 주문 상품들의 상품(Product)에 비관적 락을 걸고 재고를 복구.
+            // 1. 주문 상품들의 재고를 원자적 UPDATE로 복구
             for (orderProduct in sortedOrderProducts) {
-                val product = productRepository.findByIdWithPessimisticLock(orderProduct.product.id)
-                    .orElseThrow { BusinessException(ErrorCode.PRODUCT_NOT_FOUND) }
+                val updatedCount = productRepository.increaseStockAtomically(
+                    orderProduct.product.id,
+                    orderProduct.quantity
+                )
 
-                // 재고 증가
-                product.increaseStock(orderProduct.quantity)
+                if (updatedCount == 0) {
+                    throw BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
+                }
             }
 
             // 2. 주문 및 결제 상태 만료처리
