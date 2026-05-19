@@ -15,20 +15,16 @@ import jakarta.validation.constraints.NotEmpty
   ]
 }*/
 data class OrderCreateRequest(
-    @JvmField
     @NotBlank(message = "배송 주소는 필수입니다")
     val deliveryAddress: String,
 
-    @JvmField
     @NotEmpty(message = "상품을 최소 1개 이상 선택해야 합니다")
     @field:Valid
     val orderProducts: List<OrderProductReq>
 ) {
     data class OrderProductReq(
-        @JvmField
         val productId: Long,
 
-        @JvmField
         @Min(1)
         val quantity: Int
     )

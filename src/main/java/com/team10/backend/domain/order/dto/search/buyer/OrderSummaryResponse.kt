@@ -7,15 +7,14 @@ import java.time.LocalDateTime
 import java.util.function.Function
 
 data class OrderSummaryResponse(
-    @JvmField val orderNumber: String,
-    @JvmField val totalAmount: Int,
-    @JvmField val status: String,
-    @JvmField val representativeProductName: String,
-    @JvmField val totalQuantity: Int,
-    @JvmField val createdAt: LocalDateTime
+    val orderNumber: String,
+    val totalAmount: Int,
+    val status: String,
+    val representativeProductName: String,
+    val totalQuantity: Int,
+    val createdAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(order: Order): OrderSummaryResponse {
             // 1. 대표 상품명 가공 (코틀린의 문자열 템플릿 활용)
             val firstProduct = order.orderProducts.firstOrNull()?.product
