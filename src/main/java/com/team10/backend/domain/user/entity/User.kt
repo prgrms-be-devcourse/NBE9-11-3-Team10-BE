@@ -53,8 +53,6 @@ class User(
 ) : BaseEntity() {
 
     companion object {
-        // TODO : test 마이그레이션 후 제거 예정
-        @JvmStatic
         fun create(
             request: AuthRegisterRequest,
             encodedPassword: String,
