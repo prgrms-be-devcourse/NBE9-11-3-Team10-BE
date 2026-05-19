@@ -6,6 +6,7 @@ import com.team10.backend.global.idempotency.IdempotencyStore
 import com.team10.backend.global.idempotency.Idempotent
 import com.team10.backend.global.idempotency.aspect.IdempotencyAspect
 import com.team10.backend.global.idempotency.exception.IdempotencyException
+import com.team10.backend.global.idempotency.interceptor.IdempotencyKeyInterceptor
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.reflect.MethodSignature
 import org.junit.jupiter.api.*
@@ -102,8 +103,10 @@ class IdempotencyAspectTest {
 
         @BeforeEach
         fun setupKeyAndAnnotation() {
-            // 키 설정 (헤더 방식)
-            mockRequest.addHeader("Idempotency-Key", testKey)
+            mockRequest.setAttribute(
+                IdempotencyKeyInterceptor.REQUEST_ATTRIBUTE_KEY,
+                testKey
+            )
 
             // @Idempotent 어노테이션 모킹
             lenient().`when`(joinPoint.signature).thenReturn(methodSignature)
@@ -227,58 +230,7 @@ class IdempotencyAspectTest {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 🎯 테스트 그룹 3: Request Attribute 우선순위 검증
-    // ─────────────────────────────────────────────────────────────
-    @Nested
-    @DisplayName("Idempotency-Key 추출 우선순위")
-    inner class KeyExtractionPriorityTests {
-
-        @BeforeEach
-        fun setupAnnotation() {
-            whenever(joinPoint.signature).thenReturn(methodSignature)
-            whenever(methodSignature.method).thenReturn(method)
-            whenever(method.getAnnotation(Idempotent::class.java)).thenReturn(
-                DummyIdempotent::class.java.getAnnotation(Idempotent::class.java)
-            )
-        }
-
-        @Test
-        fun `Request Attribute 가 헤더보다 우선한다`() {
-            // Given: 둘 다 설정되었을 때 Attribute 가 우선
-            mockRequest.setAttribute("IDEMPOTENCY_KEY", "attr-key")
-            mockRequest.addHeader("Idempotency-Key", "header-key")
-
-            given(store.checkAndLock(eq("attr-key"), any())).willReturn(IdempotencyStatus.NONE)
-            given(joinPoint.proceed()).willReturn("ok")
-            given(store.complete(any(), any(), any())).willReturn(true)
-
-            // When
-            aspect.handleIdempotency(joinPoint)
-
-            // Then
-            verify(store).checkAndLock(eq("attr-key"), any())  // ✅ Attribute 키 사용
-            verify(store, never()).checkAndLock(eq("header-key"), any())
-        }
-
-        @Test
-        fun `Attribute 가 없을 때 헤더를 폴백으로 사용한다`() {
-            // Given: Attribute 는 없고 헤더만 있음
-            mockRequest.addHeader("Idempotency-Key", "header-key")
-
-            given(store.checkAndLock(eq("header-key"), any())).willReturn(IdempotencyStatus.NONE)
-            given(joinPoint.proceed()).willReturn("ok")
-            given(store.complete(any(), any(), any())).willReturn(true)
-
-            // When
-            aspect.handleIdempotency(joinPoint)
-
-            // Then
-            verify(store).checkAndLock(eq("header-key"), any())  // ✅ 헤더 키 사용
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // 🎯 테스트 그룹 4: ObjectMapper 설정 검증
+    // 🎯 테스트 그룹 3: ObjectMapper 설정 검증
     // ─────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ObjectMapper 직렬화 설정")
@@ -286,7 +238,10 @@ class IdempotencyAspectTest {
 
         @BeforeEach
         fun setupKeyAndAnnotation() {
-            mockRequest.addHeader("Idempotency-Key", testKey)
+            mockRequest.setAttribute(
+                IdempotencyKeyInterceptor.REQUEST_ATTRIBUTE_KEY,
+                testKey
+            )
             whenever(joinPoint.signature).thenReturn(methodSignature)
             whenever(methodSignature.method).thenReturn(method)
             whenever(method.getAnnotation(Idempotent::class.java)).thenReturn(

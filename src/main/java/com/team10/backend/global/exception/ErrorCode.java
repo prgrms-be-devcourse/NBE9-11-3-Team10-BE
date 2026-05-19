@@ -54,11 +54,15 @@ public enum ErrorCode {
             "요청에 'Idempotency-Key' 헤더가 필요합니다.",
             HttpStatus.BAD_REQUEST),
 
-    IDEMPOTENCY_REQUEST_IN_PROGRESS("IDEMPOTENCY_002",
+    IDEMPOTENCY_KEY_INVALID("IDEMPOTENCY_002",  // ← 새로 추가
+            "잘못된 형식의 Idempotency-Key 입니다.",
+            HttpStatus.BAD_REQUEST),
+
+    IDEMPOTENCY_REQUEST_IN_PROGRESS("IDEMPOTENCY_003",
             "동일한 요청이 이미 처리 중입니다. 잠시 후 재시도해주세요.",
             HttpStatus.CONFLICT),
 
-    IDEMPOTENCY_CACHE_MISS("IDEMPOTENCY_003",
+    IDEMPOTENCY_CACHE_MISS("IDEMPOTENCY_004",
             "내부 캐시 오류가 발생했습니다.",
             HttpStatus.INTERNAL_SERVER_ERROR),
 
