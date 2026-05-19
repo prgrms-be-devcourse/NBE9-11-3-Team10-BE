@@ -7,18 +7,17 @@ import java.time.LocalDateTime
 
 data class ProductListResponse(
     val productId: Long,
-    @JvmField val productName: String,
+    val productName: String,
     val price: Int,
-    @JvmField val nickname: String,
+    val nickname: String,
     val imageUrl: String?,
-    @JvmField val type: ProductType,
-    @JvmField val status: ProductStatus,
-    @JvmField val sellerId: Long,
+    val type: ProductType,
+    val status: ProductStatus,
+    val sellerId: Long,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(product: Product): ProductListResponse {
             return ProductListResponse(
                 product.id,
