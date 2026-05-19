@@ -2,10 +2,7 @@ package com.team10.backend.global.idempotency.testsupport
 
 import com.team10.backend.global.idempotency.Idempotent
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -62,6 +59,26 @@ class IdempotencyTestController {
             transactionId = "TXN-${UUID.randomUUID()}",
             processedAt = LocalDateTime.now(),
             message = "No idempotency: ${request.description}"
+        )
+
+        return ResponseEntity.ok(response)
+    }
+
+    // ✅ 신규: 컨트롤러에서 멱등성 키를 직접 파라미터로 받는 엔드포인트
+    @PostMapping("/process-with-key")
+    @Idempotent(lockTtlSec = 2, cacheTtlSec = 60)
+    fun processWithKeyInController(
+        @RequestHeader("Idempotency-Key") idempotencyKey: String,
+        @RequestBody request: IdempotencyTestRequest
+    ): ResponseEntity<IdempotencyTestResponse> {
+
+        incrementCount()
+
+        // 비즈니스 로직에서 키를 직접 활용하는 시뮬레이션
+        val response = IdempotencyTestResponse(
+            transactionId = "TXN-${UUID.randomUUID()}",
+            processedAt = LocalDateTime.now(),
+            message = "Controller received key: $idempotencyKey"
         )
 
         return ResponseEntity.ok(response)

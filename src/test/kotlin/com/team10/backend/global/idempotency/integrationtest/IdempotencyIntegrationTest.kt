@@ -320,6 +320,34 @@ class IdempotencyIntegrationTest {
         println("✅ @Idempotent 미적용: 키와 무관하게 2 회 실행 (카운트: ${IdempotencyTestController.executionCount})")
     }
 
+    @Test
+    @DisplayName("컨트롤러 파라미터로 멱등성 키 직접 전달 검증")
+    @WithMockUser(username = "test-user", roles = ["USER"])
+    fun `controller receives idempotency key as parameter and uses it in business logic`() {
+        // Given: 고유한 키 생성 (테스트 격리용)
+        val specificKey = "direct-use-key-${UUID.randomUUID()}"
+        val expectedMessage = "Controller received key: $specificKey"
+
+        // When: 요청 전송
+        val result = mockMvc.perform(
+            post("/api/test/idempotency/process-with-key")
+                .header("Idempotency-Key", specificKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(testRequest))
+        )
+
+        // Then:
+        // 1. HTTP 200 OK
+        // 2. 응답 메시지에 전달한 키가 그대로 포함됨
+        // 3. 비즈니스 로직 정상 실행 (카운트 1)
+        result
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.message").value(expectedMessage))
+
+        assertEquals(1, IdempotencyTestController.executionCount, "비즈니스 로직이 정확히 1회 실행되어야 함")
+        println("✅ 컨트롤러 키 직접 사용 검증 완료: '$specificKey' 정상 전달 및 처리")
+    }
+
     // ─────────────────────────────────────────────────────────────
     // 🔧 헬퍼 메서드
     // ─────────────────────────────────────────────────────────────
