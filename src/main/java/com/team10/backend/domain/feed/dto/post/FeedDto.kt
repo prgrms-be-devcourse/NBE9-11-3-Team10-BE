@@ -16,14 +16,14 @@ data class FeedDto(
     companion object {
         fun from(feed: FeedPost, isLiked: Boolean): FeedDto {
             return FeedDto(
-                feed.getId(),
+                feed.id,
                 feed.imageUrl,
                 feed.content,
                 feed.likeCount,
                 feed.commentCount,
                 isLiked,
                 false,  // 엔티티에 isNotice 필드가 있다면 feed.isNotice()로 변경
-                feed.getCreatedAt()
+                feed.createdAt
             )
         }
     }

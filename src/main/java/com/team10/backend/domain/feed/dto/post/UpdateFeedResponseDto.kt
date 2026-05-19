@@ -11,10 +11,10 @@ data class UpdateFeedResponseDto(
     companion object {
         fun from(feedPost: FeedPost): UpdateFeedResponseDto {
             return UpdateFeedResponseDto(
-                feedPost.getId(),
+                feedPost.id,
                 feedPost.content,
                 feedPost.imageUrl,
-                feedPost.getUpdatedAt().toString()
+                feedPost.updatedAt.toString()
             )
         }
     }

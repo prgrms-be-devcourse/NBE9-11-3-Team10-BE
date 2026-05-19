@@ -21,7 +21,7 @@ data class CommentResponseDto(
         companion object {
             fun from(writer: User): Writer {
                 return Writer(
-                    writer.getId(),
+                    writer.id,
                     writer.nickname,
                     writer.imageUrl
                 )
@@ -34,14 +34,14 @@ data class CommentResponseDto(
             val isMine = currentUser != null && comment.writer.id == currentUser.id
 
             return CommentResponseDto(
-                comment.getId(),
+                comment.id,
                 Writer.from(comment.writer),
                 comment.content,
                 comment.likeCount,
                 isLiked,
                 isMine,
-                comment.getCreatedAt().toString(),
-                comment.getUpdatedAt().toString()
+                comment.createdAt.toString(),
+                comment.updatedAt.toString()
             )
         }
     }

@@ -90,7 +90,7 @@ class FeedCommentService(
 
         val liked = feedCommentLikeRepository.existsByFeedCommentIdAndUserId(
             commentId,
-            currentUser.getId()
+            currentUser.id
         )
 
         return from(feedComment, liked, currentUser)
@@ -185,12 +185,12 @@ class FeedCommentService(
             return emptySet()
         }
 
-        val commentIds = comments.map { comment -> comment.getId() }
+        val commentIds = comments.map { comment -> comment.id }
         if (commentIds.isEmpty()) {
             return emptySet()
         }
 
-        return feedCommentLikeRepository.findLikedCommentIdsByUserId(currentUser.getId(), commentIds).toSet()
+        return feedCommentLikeRepository.findLikedCommentIdsByUserId(currentUser.id, commentIds).toSet()
     }
 
     private fun toCommentResponse(
@@ -198,7 +198,7 @@ class FeedCommentService(
         likedCommentIds: Set<Long>,
         currentUser: User?
     ): CommentResponseDto {
-        val liked = comment.getId() in likedCommentIds
+        val liked = comment.id in likedCommentIds
         return from(comment, liked, currentUser)
     }
 
@@ -210,8 +210,8 @@ class FeedCommentService(
 
     private fun toggleLike(feedComment: FeedComment, currentUser: User): Boolean {
         val existingLike = feedCommentLikeRepository.findByFeedCommentIdAndUserId(
-            feedComment.getId(),
-            currentUser.getId()
+            feedComment.id,
+            currentUser.id
         )
 
         if (existingLike != null) {
