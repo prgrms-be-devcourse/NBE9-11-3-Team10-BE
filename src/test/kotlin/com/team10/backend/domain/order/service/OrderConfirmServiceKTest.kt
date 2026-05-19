@@ -63,11 +63,11 @@ class OrderConfirmServiceKTest {
         val expectedResponse = TossConfirmResponse(paymentKey = "test_pk_123", orderId = orderNumber, status = "DONE")
 
         whenever(orderRepository.findByOrderNumber(anyString())).thenReturn(order)
-        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any())).thenReturn(mockPayment)
+        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any(),any())).thenReturn(mockPayment)
         whenever(paymentStatusService.parseResponse(jsonResponseBody)).thenReturn(expectedResponse)
 
         // when
-        val result = orderConfirmService.sendConfirmRequest(request, null)
+        val result = orderConfirmService.sendConfirmRequest(request, "test_idempotency_key",null)
 
         // then
         assertEquals(expectedResponse, result)
@@ -89,13 +89,13 @@ class OrderConfirmServiceKTest {
         )
 
         whenever(orderRepository.findByOrderNumber(anyString())).thenReturn(order)
-        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any())).thenReturn(mockPayment)
+        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any(),any())).thenReturn(mockPayment)
         whenever(restTemplate.postForEntity(anyString(), any(), eq(TossConfirmResponse::class.java))).thenThrow(notFoundException)
 
         // when & then
         //  1 ExhaustedRetryException
         val exhaustedException = assertThrows(org.springframework.retry.ExhaustedRetryException::class.java) {
-            orderConfirmService.sendConfirmRequest(request, null)
+            orderConfirmService.sendConfirmRequest(request, "test_idempotency_key",null)
         }
 
         //  2  내부 cause(BusinessException)를 확인
@@ -123,12 +123,12 @@ class OrderConfirmServiceKTest {
         )
 
         whenever(orderRepository.findByOrderNumber(anyString())).thenReturn(order)
-        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any())).thenReturn(mockPayment)
+        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any(),any())).thenReturn(mockPayment)
         whenever(restTemplate.postForEntity(anyString(), any(), eq(TossConfirmResponse::class.java))).thenThrow(forbiddenException)
 
         // when & then
         val exhaustedException = assertThrows(org.springframework.retry.ExhaustedRetryException::class.java) {
-            orderConfirmService.sendConfirmRequest(request, null)
+            orderConfirmService.sendConfirmRequest(request, "test_idempotency_key",null)
         }
 
         val businessException = exhaustedException.cause as? BusinessException
@@ -158,12 +158,12 @@ class OrderConfirmServiceKTest {
         )
 
         whenever(orderRepository.findByOrderNumber(anyString())).thenReturn(order)
-        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any())).thenReturn(mockPayment)
+        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any(),any())).thenReturn(mockPayment)
         whenever(restTemplate.postForEntity(anyString(), any(), eq(TossConfirmResponse::class.java))).thenThrow(badRequestException)
 
         // when & then
         val exhaustedException = assertThrows(org.springframework.retry.ExhaustedRetryException::class.java) {
-            orderConfirmService.sendConfirmRequest(request, null)
+            orderConfirmService.sendConfirmRequest(request, "test_idempotency_key",null)
         }
 
         val businessException = exhaustedException.cause as? BusinessException
@@ -189,12 +189,12 @@ class OrderConfirmServiceKTest {
         )
 
         whenever(orderRepository.findByOrderNumber(anyString())).thenReturn(order)
-        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any())).thenReturn(mockPayment)
+        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any(),any())).thenReturn(mockPayment)
         whenever(restTemplate.postForEntity(anyString(), any(), eq(TossConfirmResponse::class.java))).thenThrow(serverErrorException)
 
         // when & then
         val exhaustedException = assertThrows(org.springframework.retry.ExhaustedRetryException::class.java) {
-            orderConfirmService.sendConfirmRequest(request, null)
+            orderConfirmService.sendConfirmRequest(request, "test_idempotency_key",null)
         }
 
         val businessException = exhaustedException.cause as? BusinessException
@@ -213,7 +213,7 @@ class OrderConfirmServiceKTest {
         val mockPayment = PaymentFixture.createReady(order = order)
 
         whenever(orderRepository.findByOrderNumber(anyString())).thenReturn(order)
-        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any())).thenReturn(mockPayment)
+        whenever(paymentStatusService.getOrCreatePaymentAttempt(any(), any(),any())).thenReturn(mockPayment)
 
         // 매번 타임아웃 오류 발생 유도
         whenever(restTemplate.postForEntity(anyString(), any(), eq(TossConfirmResponse::class.java)))
@@ -221,7 +221,7 @@ class OrderConfirmServiceKTest {
 
         // when & then
         val exception = assertThrows(BusinessException::class.java) {
-            orderConfirmService.sendConfirmRequest(request, null)
+            orderConfirmService.sendConfirmRequest(request, "test_idempotency_key",null)
         }
 
         // then

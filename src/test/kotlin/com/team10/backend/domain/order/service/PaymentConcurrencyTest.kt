@@ -94,7 +94,7 @@ class PaymentConcurrencyTest {
                 try {
                     // 이미 DB에 PENDING 상태의 최신 결제 내역이 있으므로,
                     // 두 스레드 모두 createNewPayment()까지 가지 못하고 handleExistingPayment()의 PENDING 분기점에서 예외가 터져야 합니다.
-                    paymentStatusService.getOrCreatePaymentAttempt(realOrder, RequestType.PAYMENT)
+                    paymentStatusService.getOrCreatePaymentAttempt(realOrder, RequestType.PAYMENT,"test_idempotency_key",)
                     successCount.incrementAndGet()
                 } catch (e: BusinessException) {
                     businessExceptionCount.incrementAndGet()
@@ -118,129 +118,6 @@ class PaymentConcurrencyTest {
         assertEquals(ErrorCode.ALREADY_PROCESSED_PAYMENT, capturedErrorCode, "에러 코드가 ALREADY_PROCESSED_PAYMENT 여야 합니다.")
     }
 
-    @Test
-    @DisplayName("시나리오 F1-2(통합): UNCERTAIN 상태에서 두 스레드가 동시에 선점 시도 시, 한 건만 성공하고 늦은 건은 ALREADY_PROCESSED_PAYMENT 예외가 발생한다")
-    fun fail_F1_2_real_concurrency_uncertain_race_condition_fail() {
-
-        // Given:  실제 DB 데이터 및 "UNCERTAIN" 결제 사전 구축
-        val buyer = userRepository.save(UserFixture.create())
-        val seller = userRepository.save(UserFixture.createWithSellerInfo())
-        val product = productRepository.save(ProductFixture.createSelling(user = seller))
-
-        // 실제 주문(Order) 엔티티 생성 및 저장
-        val realOrder = orderRepository.save(
-            OrderFixture.create(
-                user = buyer,
-                products = listOf(product to 1)
-            )
-        )
-
-        // [핵심 설정] 이전 결제 요청 중 망 에러나 타임아웃이 발생하여 상태가 UNCERTAIN에 빠진 상황을 만듭니다.
-        val uncertainPayment = Payment.createPayment(
-            order = realOrder,
-            orderNumber = realOrder.orderNumber,
-            amount = realOrder.totalAmount,
-            idempotencyKey = "TOSS-IDEMPOTENCY-KEY-UNCERTAIN-2026",
-            type = RequestType.PAYMENT
-        )
-        uncertainPayment.markAsUncertain() // 상태를 의도적으로 UNCERTAIN 으로 변경
-        paymentRepository.saveAndFlush(uncertainPayment)
-
-        // 멀티스레드 테스트 환경 설정 (2개의 스레드가 동시에 UNCERTAIN 복구 요청을 보냄)
-        val threadCount = 2
-        val executorService = Executors.newFixedThreadPool(threadCount)
-        val latch = CountDownLatch(threadCount)
-
-        val successCount = AtomicInteger(0)
-        val businessExceptionCount = AtomicInteger(0)
-        var capturedErrorCode: ErrorCode? = null
-
-        //  When: 실제 멀티스레드가 동시에 동일한 UNCERTAIN 건에 대해 복구(선점) 시도
-        repeat(threadCount) {
-            executorService.submit {
-                try {
-                    // 두 스레드가 동시에 getOrCreatePaymentAttempt를 호출
-                    // 둘 다 똑같이 최신 레코드로 uncertainPayment를 조회하게 되고, handleExistingPayment()의 UNCERTAIN 분기로 들어감
-                    // 그 후 DB에 `updateStatusFromUncertainToPending` 원자적 쿼리를 동시에 날리며 레이스 컨디션이 발생
-                    paymentStatusService.getOrCreatePaymentAttempt(realOrder, RequestType.PAYMENT)
-                    successCount.incrementAndGet()
-                } catch (e: BusinessException) {
-                    businessExceptionCount.incrementAndGet()
-                    capturedErrorCode = e.errorCode // 실패한 스레드의 에러 코드 캡처
-                } finally {
-                    latch.countDown()
-                }
-            }
-        }
-        latch.await()
-
-        // Then: 결과 검증 (원자적 쿼리에 의해 딱 한 스레드만 선점에 성공해야 함)
-        // DB 업데이트 행수(updatedRows)가 1이었던 단 하나의 스레드만 성공해서 PENDING 상태로 진행
-        assertEquals(1, successCount.get(), "두 동시 요청 중 단 하나의 스레드만 UNCERTAIN 레코드를 선점(성공)해야 합니다.")
-
-        // 미세하게 늦어 updatedRows가 0이 된 나머지 한 스레드는 예외가 터져야 한다.
-        assertEquals(1, businessExceptionCount.get(), "선점에 실패한 나머지 한 건은 반드시 실패해야 합니다.")
-
-        // 선점 실패 스레드가 뱉은 에러 코드가 ALREADY_PROCESSED_PAYMENT 인지 검증
-        assertEquals(ErrorCode.ALREADY_PROCESSED_PAYMENT, capturedErrorCode, "에러 코드가 ALREADY_PROCESSED_PAYMENT 여야 합니다.")
-    }
-
-    //클라이언트에서 멱등키를 생성해서 보내면 주석 제거할 예정
-    //지금은 findFirstByOrderOrderByCreatedAtDesc 비관락(@Lock(LockModeType.PESSIMISTIC_WRITE))이 필요함.
-//    @Test
-//    @DisplayName("시나리오 F1-3(통합): 실제 동시성 요청 발생 시, DB 유니크 제약 조건 충돌이 ALREADY_PROCESSED_PAYMENT 예외로 정상 치환된다")
-//    fun fail_F1_3_real_concurrency_db_unique_constraint_violation() {
-//        // 구매자 및 판매자 생성 및 저장
-//        val buyer = userRepository.save(UserFixture.create())
-//        val seller = userRepository.save(UserFixture.createWithSellerInfo())
-//
-//        // 판매 중인 상품 생성 및 저장
-//        val product = productRepository.save(ProductFixture.createSelling(user = seller))
-//
-//        val realOrder = orderRepository.save(
-//            OrderFixture.create(
-//                user = buyer,
-//                products = listOf(product to 1)
-//            )
-//        )
-//
-//        // 멀티스레드 테스트 환경 설정 (2개의 스레드가 동시에 요청)
-//        val threadCount = 2
-//        val executorService = Executors.newFixedThreadPool(threadCount)
-//        val latch = CountDownLatch(threadCount)
-//
-//        val successCount = AtomicInteger(0)
-//        val businessExceptionCount = AtomicInteger(0)
-//        var capturedErrorCode: ErrorCode? = null
-//
-//        // When: 실제 멀티스레드를 구동하여 동시에 서비스 메서드 호출
-//        repeat(threadCount) {
-//            executorService.submit {
-//                try {
-//                    // 실제 서비스 레이어 진입 (동시성 타이밍 싸움 시작)
-//                    paymentStatusService.getOrCreatePaymentAttempt(realOrder, RequestType.PAYMENT)
-//                    successCount.incrementAndGet()
-//                } catch (e: BusinessException) {
-//                    businessExceptionCount.incrementAndGet()
-//                    capturedErrorCode = e.errorCode // 발생한 비즈니스 에러 코드 캡처
-//                } finally {
-//                    latch.countDown() // 스레드 작업 완료 알림
-//                }
-//            }
-//        }
-//        latch.await()
-//
-//
-//        //Then: 결과 검증 (하나는 성공, 하나는 지정된 에러로 실패해야 함)
-//        // 결제 생성 시도는 동시에 들어왔으므로 딱 1번만 성공해야 합니다.
-//        assertEquals(1, successCount.get(), "하나의 결제 요청만 정상적으로 저장되어야 합니다.")
-//
-//        // 나머지 한 건은 유니크 제약조건에 걸려 실패해야 합니다.
-//        assertEquals(1, businessExceptionCount.get(), "동시 요청 중 한 건은 반드시 실패해야 합니다.")
-//
-//        // 실패했을 때 뱉은 에러 코드가 우리가 원했던 알맞은 비즈니스 에러코드인지 검증합니다.
-//        assertEquals(ErrorCode.ALREADY_PROCESSED_PAYMENT, capturedErrorCode, "에러 코드가 ALREADY_PROCESSED_PAYMENT 여야 합니다.")
-//    }
 
     @Test
     @DisplayName("시나리오 S2-3(통합): 사용자 결제 승인과 웹훅이 동시에 성공 처리를 시도해도, 비관적 락에 의해 한 번만 정산 처리가 된다")

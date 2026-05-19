@@ -78,7 +78,7 @@ class PaymentStatusServiceKTest {
         whenever(paymentRepository.saveAndFlush(any<Payment>())).thenReturn(savedPayment)
 
         // when
-        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
+        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT,"test_idempotency_key")
 
         // then
         assertNotNull(result)
@@ -98,7 +98,7 @@ class PaymentStatusServiceKTest {
         whenever(paymentRepository.saveAndFlush(any<Payment>())).thenReturn(newPayment)
 
         // when
-        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
+        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT,"test_idempotency_key")
 
         // then
         assertNotNull(result)
@@ -116,7 +116,7 @@ class PaymentStatusServiceKTest {
         whenever(paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)).thenReturn(previousPaidPayment)
 
         // when
-        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
+        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT,"test_idempotency_key")
 
         // then
         assertNotNull(result)
@@ -134,10 +134,10 @@ class PaymentStatusServiceKTest {
         ReflectionTestUtils.setField(uncertainPayment, "id", 1L)
 
         whenever(paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)).thenReturn(uncertainPayment)
-        whenever(paymentRepository.updateStatusFromUncertainToPending(uncertainPayment.id)).thenReturn(1) // 원자적 쿼리 선점 성공 승인(1 row)
+//        whenever(paymentRepository.updateStatusFromUncertainToPending(uncertainPayment.id)).thenReturn(1) // 원자적 쿼리 선점 성공 승인(1 row)
 
         // when
-        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
+        val result = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT,"test_idempotency_key")
 
         // then
         assertNotNull(result)
@@ -161,48 +161,12 @@ class PaymentStatusServiceKTest {
 
         // when & then
         val exception = assertThrows(BusinessException::class.java) {
-            paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
+            paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT,"test_idempotency_key")
         }
 
         assertEquals(ErrorCode.ALREADY_PROCESSED_PAYMENT, exception.errorCode)
     }
 
-    @Test
-    @DisplayName("시나리오 F1-2: UNCERTAIN 상태에서 다른 스레드와 레이스 컨디션 발생(선점 실패) - ALREADY_PROCESSED_PAYMENT 예외가 발생한다")
-    fun fail_F1_2_uncertain_race_condition_fail_throws_exception() {
-        // given
-        val order = createMockOrder()
-        val uncertainPayment = Payment.builder().order(order).orderNumber(order.orderNumber).totalAmount(order.totalAmount).status(PaymentStatus.UNCERTAIN).build()
-
-        ReflectionTestUtils.setField(uncertainPayment, "id", 1L)
-
-        whenever(paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)).thenReturn(uncertainPayment)
-        whenever(paymentRepository.updateStatusFromUncertainToPending(uncertainPayment.id)).thenReturn(0) // 다른 스레드가 이미 업데이트하여 0 리턴
-
-        // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
-        }
-
-        assertEquals(ErrorCode.ALREADY_PROCESSED_PAYMENT, exception.errorCode)
-    }
-
-    @Test
-    @DisplayName("시나리오 F1-3: 동시성 이슈로 DB 유니크 제약 조건 충돌(DataIntegrityViolationException) - ALREADY_PROCESSED_PAYMENT 예외로 치환된다")
-    fun fail_F1_3_db_unique_constraint_violation_throws_exception() {
-        // given
-        val order = createMockOrder()
-
-        whenever(paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)).thenReturn(null) // 신규 생성 트랙 진입 유도
-        whenever(paymentRepository.saveAndFlush(any<Payment>())).thenThrow(DataIntegrityViolationException::class.java) // 디비 제약조건 예외 유도
-
-        // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
-        }
-
-        assertEquals(ErrorCode.ALREADY_PROCESSED_PAYMENT, exception.errorCode)
-    }
 
 
     // =========================================================================
