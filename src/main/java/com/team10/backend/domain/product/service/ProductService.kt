@@ -85,8 +85,8 @@ class ProductService(
 
     @Transactional(readOnly = true)
     fun detail(productId: Long): ProductDetailResponse {
-        val product = productRepository.findById(productId)
-            .orElseThrow { BusinessException(ErrorCode.PRODUCT_NOT_FOUND) }
+        val product = productRepository.findByIdWithUser(productId)
+            ?: throw BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
 
         if (product.status == ProductStatus.INACTIVE) {
             throw BusinessException(ErrorCode.PRODUCT_NOT_FOUND)
