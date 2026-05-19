@@ -223,7 +223,7 @@ class PaymentUpdateServiceKTest {
     // =========================================================================
 
     @Test
-    @DisplayName("시나리오 S2-1: 정상적인 재고 복구 및 주문 만료 처리 - 상품 ID 오름차순으로 정렬되어 비관적 락을 잡고 재고를 늘린다")
+    @DisplayName("시나리오 S2-1: 정상적인 재고 복구 및 주문 만료 처리 - 상품 ID 오름차순으로 원자적 UPDATE를 실행한다")
     fun success_S2_1_rollback_stock_and_cancel_order() {
         // given
         val mockOrder = mock(Order::class.java)
@@ -233,14 +233,14 @@ class PaymentUpdateServiceKTest {
         whenever(orderRepository.findByOrderNumberWithPessimisticLock(orderId)).thenReturn(mockOrder)
         whenever(paymentRepository.findFirstByOrderOrderByCreatedAtDesc(mockOrder)).thenReturn(mockPayment)
 
-        // 데드락 방지 정렬 검증을 위해 ID를 역순(2L, 1L)으로 리스트 생성
+        // 재고 복구 UPDATE 호출 순서 검증을 위해 ID를 역순(2L, 1L)으로 리스트 생성
         val (op2, p2) = createMockOrderProduct(productId = 2L, quantity = 3)
         val (op1, p1) = createMockOrderProduct(productId = 1L, quantity = 5)
         whenever(mockOrder.orderProducts).thenReturn(listOf(op2, op1) as MutableList<OrderProducts>?)
 
-        // Repository 조회 스텁 설정 (ID 순서대로 조회될 예정)
-        whenever(productRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(p1))
-        whenever(productRepository.findByIdWithPessimisticLock(2L)).thenReturn(Optional.of(p2))
+        // Repository 재고 복구 스텁 설정 (ID 순서대로 업데이트될 예정)
+        whenever(productRepository.increaseStockAtomically(1L, 5)).thenReturn(1)
+        whenever(productRepository.increaseStockAtomically(2L, 3)).thenReturn(1)
 
         // when
         paymentUpdateService.rollbackStockAndCancelOrder(
@@ -251,16 +251,16 @@ class PaymentUpdateServiceKTest {
         )
 
         // then
-        // 1. 재고 복구 로직이 정해진 수량만큼 제대로 호출되었는지 확인
-        verify(p1, times(1)).increaseStock(5)
-        verify(p2, times(1)).increaseStock(3)
-
-        // 2. 락 획득 순서 검증 (InOrder 검증을 통해 ID 1L이 먼저, 2L이 나중에 조회되었는지 추적)
+        // 1. 재고 복구 UPDATE가 상품 ID 오름차순으로 호출되었는지 검증
         val inOrder = inOrder(productRepository)
-        inOrder.verify(productRepository).findByIdWithPessimisticLock(1L)
-        inOrder.verify(productRepository).findByIdWithPessimisticLock(2L)
+        inOrder.verify(productRepository).increaseStockAtomically(1L, 5)
+        inOrder.verify(productRepository).increaseStockAtomically(2L, 3)
 
-        // 3. 엔티티 상태 변경 확인
+        // 2. 엔티티 메서드가 아닌 원자적 UPDATE로 재고 복구했는지 검증
+        verify(p1, never()).increaseStock(any())
+        verify(p2, never()).increaseStock(any())
+
+        // 3. 주문 및 결제 상태 만료 처리 확인
         verify(mockPayment, times(1)).expirePayment()
         verify(mockOrder, times(1)).expireStatusOrder()
     }
@@ -337,14 +337,14 @@ class PaymentUpdateServiceKTest {
         whenever(orderRepository.findByOrderNumberWithPessimisticLock(orderId)).thenReturn(mockOrder)
         whenever(paymentRepository.findFirstByOrderOrderByCreatedAtDesc(mockOrder)).thenReturn(mockPayment)
 
-        val (op1, p1) = createMockOrderProduct(productId = 1L, quantity = 5)
+        val (op1, _) = createMockOrderProduct(productId = 1L, quantity = 5)
 
         lenient().whenever(op1.quantity).thenReturn(5)
 
         whenever(mockOrder.orderProducts).thenReturn(listOf(op1) as MutableList<OrderProducts>?)
 
-        // 복구하려는 도중 해당 상품이 사라진 상태 시뮬레이션
-        whenever(productRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.empty())
+        // 원자적 재고 복구 UPDATE 실패 상황 시뮬레이션
+        whenever(productRepository.increaseStockAtomically(1L, 5)).thenReturn(0)
 
         // when & then
         val exception = assertThrows(BusinessException::class.java) {
@@ -356,5 +356,4 @@ class PaymentUpdateServiceKTest {
         verify(mockPayment, never()).expirePayment()
         verify(mockOrder, never()).expireStatusOrder()
     }
-
 }
