@@ -32,6 +32,11 @@ class PaymentWebhookService2(
         val payment = paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)
             ?: throw BusinessException(ErrorCode.PAYMENT_NOT_FOUND)
 
+        if (payment.paymentKey != null && payment.paymentKey != paymentKey) {
+            // 다른 결제 시도 건에 대한 웹훅이므로 꼬이지 않게 무시하거나 예외 처리
+            return
+        }
+
         val currentStatus = payment.status
         val nextTossStatus = convertToPaymentStatus(tossServerStatus)
 

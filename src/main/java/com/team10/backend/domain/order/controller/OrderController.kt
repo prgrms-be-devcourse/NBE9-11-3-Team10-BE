@@ -11,6 +11,7 @@ import com.team10.backend.domain.order.dto.search.seller.SellerOrderListResponse
 import com.team10.backend.domain.order.service.OrderService
 import com.team10.backend.domain.order.service.PaymentService
 import com.team10.backend.global.dto.ApiResponse
+import com.team10.backend.global.idempotency.Idempotent
 import com.team10.backend.global.security.CustomUserPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -32,10 +34,13 @@ class OrderController(
     private val paymentService: PaymentService
 ) {
 
+    @Idempotent(lockTtlSec = 10, cacheTtlSec = 180)
     @PostMapping("/confirm")
     @Operation(summary = "주문 검증", description = "상품을 구매할때 토스 페이먼트 api를 호출하여 검증합니다.")
-    fun confirmPayment(@RequestBody request: ConfirmRequest): ApiResponse<TossConfirmResponse> {
-        val response = paymentService.confirmPayment(request)
+    fun confirmPayment(
+        @RequestHeader("Idempotency-Key") idempotencyKey: String,
+        @RequestBody request: ConfirmRequest): ApiResponse<TossConfirmResponse> {
+        val response = paymentService.confirmPayment(request,idempotencyKey)
         return ApiResponse.ok(response)
     }
 

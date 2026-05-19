@@ -36,35 +36,30 @@ class PaymentStatusService(
     }
 
     @Transactional
-    fun getOrCreatePaymentAttempt(order: Order, type: RequestType): Payment {
-        try {
-            // 1. 최신 레코드 조회 (UNCERTAIN 등의 경우에 이전 결제 상태 값이 필요함)
-            val latestPayment = paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)
+    fun getOrCreatePaymentAttempt(order: Order, type: RequestType,idempotencyKey: String): Payment {
+        // 1. 최신 레코드 조회 (UNCERTAIN 등의 경우에 이전 결제 상태 값이 필요함)
+        val latestPayment = paymentRepository.findFirstByOrderOrderByCreatedAtDesc(order)
 
-            if (latestPayment != null) {
-                // 기존 결제 시도가 있는 경우 분기 처리 (PAID, PENDING, UNCERTAIN 등)
-                val result = handleExistingPayment(latestPayment)
-                if (result != null) {
-                    return result
-                }
+        if (latestPayment != null) {
+            // 기존 결제 시도가 있는 경우 분기 처리 (PAID, PENDING, UNCERTAIN 등)
+            val result = handleExistingPayment(latestPayment)
+            if (result != null) {
+                return result
             }
-            // 2. 신규 생성 (FAILED 이후 혹은 최초 생성)
-            return createNewPayment(order, type)
-        } catch (e: DataIntegrityViolationException) {
-            throw BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT)
         }
+        // 2. 신규 생성 (FAILED 이후 혹은 최초 생성)
+        return createNewPayment(order, type,idempotencyKey)
     }
 
-    private fun createNewPayment(order: Order, type: RequestType): Payment {
+    private fun createNewPayment(order: Order, type: RequestType,idempotencyKey: String): Payment {
         val tossOrderNumber = order.orderNumber
-        val tossIdempotencyKey = generateTossKey(tossOrderNumber)
 
         // Payment 컴패니언 객체의 생성 메서드 직접 호출
         val newPayment = Payment.createPayment(
             order = order,
             orderNumber = tossOrderNumber,
             amount = order.totalAmount,
-            idempotencyKey = tossIdempotencyKey,
+            idempotencyKey = idempotencyKey,
             type = type // payment 승인 혹은 cancel 환불
         )
 
@@ -81,16 +76,8 @@ class PaymentStatusService(
                 curPayment
             }
             PaymentStatus.UNCERTAIN -> {
-                // 네트워크 에러 등으로 상태가 불분명했던 경우:
-                // 토스 가이드에 따라 '동일한 Idempotency-Key'를 유지하며 재시도 (중복 결제 방지)
-                // DB 원자적 쿼리를 이용하여 선점 여부 확인 (비관적 락 대체)
-                val updatedRows = paymentRepository.updateStatusFromUncertainToPending(curPayment.id)
-                if (updatedRows == 1) {
-                    curPayment.markAsPending() // 다시 PENDING으로 돌리고 진행
-                    curPayment
-                } else {
-                    throw BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT)
-                }
+                curPayment.markAsPending() // READY와 동일하게 PENDING으로만 전환
+                curPayment
             }
 
             PaymentStatus.PENDING -> throw BusinessException(ErrorCode.ALREADY_PROCESSED_PAYMENT)
@@ -101,11 +88,6 @@ class PaymentStatusService(
         }
     }
 
-    fun generateTossKey(orderId: String): String {
-        // 문자열 템플릿과 고정값 가독성 개선
-        val uniqueSuffix = UUID.randomUUID().toString().substring(0, 8)
-        return "${orderId}_$uniqueSuffix"
-    }
 
     @Transactional
     fun finalizeRecord(record: Payment, status: PaymentStatus, response: TossConfirmResponse?) {
