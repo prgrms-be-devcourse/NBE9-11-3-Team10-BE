@@ -17,4 +17,9 @@ interface IdempotencyStore {
      * 수동 해제 (타임아웃/취소/에러 시)
      */
     fun release(key: String)
+
+    /**
+     * COMPLETED 상태일 때 저장된 JSON 응답 조회
+     */
+    fun getResponse(key: String): String?
 }

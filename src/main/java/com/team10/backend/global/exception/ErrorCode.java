@@ -49,6 +49,19 @@ public enum ErrorCode {
     DELIVERY_NOT_FOUND("DELIVERY_02", "배송 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     SHIPPING_ADDRESS_REQUIRED("DELIVERY_03", "배송 주소는 필수 항목입니다.", HttpStatus.BAD_REQUEST),
 
+    // === 멱등성 도메인 (8000~8999) ===
+    IDEMPOTENCY_KEY_MISSING("IDEMPOTENCY_001",
+            "요청에 'Idempotency-Key' 헤더가 필요합니다.",
+            HttpStatus.BAD_REQUEST),
+
+    IDEMPOTENCY_REQUEST_IN_PROGRESS("IDEMPOTENCY_002",
+            "동일한 요청이 이미 처리 중입니다. 잠시 후 재시도해주세요.",
+            HttpStatus.CONFLICT),
+
+    IDEMPOTENCY_CACHE_MISS("IDEMPOTENCY_003",
+            "내부 캐시 오류가 발생했습니다.",
+            HttpStatus.INTERNAL_SERVER_ERROR),
+
     //====토스 외부 API 예외처리=====
     // -------승인 비즈니스 오류(400,404,403)-----
     //404
