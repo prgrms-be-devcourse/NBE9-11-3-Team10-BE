@@ -4,14 +4,17 @@ import com.team10.backend.domain.image.service.ImageUploadService
 import com.team10.backend.domain.user.dto.ProfileImageUpdateRequest
 import com.team10.backend.domain.user.dto.SellerUpdateRequest
 import com.team10.backend.domain.user.dto.UserUpdateRequest
+import com.team10.backend.domain.user.entity.User
 import com.team10.backend.domain.user.repository.UserRepository
 import com.team10.backend.domain.user.service.UserService
 import com.team10.backend.fixture.UserFixture
 import com.team10.backend.global.exception.BusinessException
 import com.team10.backend.global.exception.ErrorCode
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -38,8 +41,7 @@ class UserServiceTest {
     @DisplayName("사용자 개인정보 조회 - 성공")
     fun getUserProfile_success() {
         // given
-        val user = UserFixture.create()
-        ReflectionTestUtils.setField(user, "id", 1L)
+        val user = UserFixture.create().withId(1L)
 
         whenever(userRepository.findById(1L))
             .thenReturn(Optional.of(user))
@@ -48,18 +50,18 @@ class UserServiceTest {
         val response = userService.getUserProfile(1L)
 
         // then
-        Assertions.assertNotNull(response)
-        Assertions.assertEquals(user.name, response.name)
+        assertNotNull(response)
+        assertEquals(user.name, response.name)
     }
 
     @Test
     @DisplayName("판매자 개인정보 조회 - 성공")
     fun getSellerProfile_success() {
         // given
-        val user = UserFixture.createWithSellerInfo()
-        ReflectionTestUtils.setField(user, "id", 1L)
-        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now())
-        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now())
+        val user = UserFixture.createWithSellerInfo().withId(1L).apply {
+            ReflectionTestUtils.setField(this, "createdAt", LocalDateTime.now())
+            ReflectionTestUtils.setField(this, "updatedAt", LocalDateTime.now())
+        }
 
         whenever(userRepository.findById(1L))
             .thenReturn(Optional.of(user))
@@ -68,8 +70,8 @@ class UserServiceTest {
         val response = userService.getSellerProfile(1L)
 
         // then
-        Assertions.assertNotNull(response)
-        Assertions.assertEquals(user.name, response.name)
+        assertNotNull(response)
+        assertEquals(user.name, response.name)
     }
 
     @Test
@@ -82,26 +84,23 @@ class UserServiceTest {
             .thenReturn(Optional.of(user))
 
         // when & then
-        val ex = assertThrows<BusinessException> {
-            userService.getSellerProfile(1L)
-        }
+        val ex = assertThrows<BusinessException> { userService.getSellerProfile(1L) }
 
-        Assertions.assertEquals(ErrorCode.NOT_SELLER, ex.errorCode)
+        assertEquals(ErrorCode.NOT_SELLER, ex.errorCode)
     }
 
     @Test
     @DisplayName("사용자 개인정보 수정 - 성공")
     fun updateMyUserProfile_success() {
         // given
-        val user = UserFixture.create()
-        ReflectionTestUtils.setField(user, "id", 1L)
+        val user = UserFixture.create().withId(1L)
 
         user.updateProfileImage("https://old-image.test/profile.jpg")
 
         val request = UserUpdateRequest(
-            "새로운닉네임",
-            "010-9999-9999",
-            "부산"
+            nickname = "새로운닉네임",
+            phoneNumber = "010-9999-9999",
+            address = "부산"
         )
 
         whenever(userRepository.findById(1L))
@@ -111,23 +110,21 @@ class UserServiceTest {
         val response = userService.updateMyUserProfile(1L, request)
 
         // then
-        Assertions.assertNotNull(response)
-        Assertions.assertEquals("새로운닉네임", response.nickname)
-        Assertions.assertEquals("010-9999-9999", response.phoneNumber)
-        Assertions.assertEquals("부산", response.address)
+        assertNotNull(response)
+        assertEquals("새로운닉네임", response.nickname)
+        assertEquals("010-9999-9999", response.phoneNumber)
+        assertEquals("부산", response.address)
     }
 
     @Test
     @DisplayName("사용자 프로필 이미지 수정 - 성공")
     fun updateMyUserProfileImage_success() {
         // given
-        val user = UserFixture.create()
-        ReflectionTestUtils.setField(user, "id", 1L)
+        val user = UserFixture.create().withId(1L)
 
         user.updateProfileImage("https://old-image.test/profile.jpg")
 
-        val request =
-            ProfileImageUpdateRequest("https://new-image.test/profile.jpg")
+        val request = ProfileImageUpdateRequest("https://new-image.test/profile.jpg")
 
         whenever(userRepository.findById(1L))
             .thenReturn(Optional.of(user))
@@ -136,7 +133,7 @@ class UserServiceTest {
         val response = userService.updateMyProfileImage(1L, request)
 
         // then
-        Assertions.assertEquals(
+        assertEquals(
             "https://new-image.test/profile.jpg",
             response.imageUrl
         )
@@ -147,8 +144,7 @@ class UserServiceTest {
     @Test
     @DisplayName("사용자 프로필 이미지 삭제 - 성공")
     fun deleteMyUserProfileImage_success() {
-        val user = UserFixture.create()
-        ReflectionTestUtils.setField(user, "id", 1L)
+        val user = UserFixture.create().withId(1L)
 
         user.updateProfileImage("https://old-image.test/profile.jpg")
 
@@ -157,7 +153,7 @@ class UserServiceTest {
 
         val response = userService.deleteMyProfileImage(1L)
 
-        Assertions.assertNull(response.imageUrl)
+        assertNull(response.imageUrl)
         verify(imageUploadService)
             .deleteIfManaged("https://old-image.test/profile.jpg")
     }
@@ -166,17 +162,17 @@ class UserServiceTest {
     @DisplayName("판매자 개인정보 수정 - 성공")
     fun updateMySellerProfile_success() {
         // given
-        val user = UserFixture.createWithSellerInfo()
-        ReflectionTestUtils.setField(user, "id", 1L)
-        ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now())
-        ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.now())
+        val user = UserFixture.createWithSellerInfo().withId(1L).apply {
+            ReflectionTestUtils.setField(this, "createdAt", LocalDateTime.now())
+            ReflectionTestUtils.setField(this, "updatedAt", LocalDateTime.now())
+        }
 
         val request = SellerUpdateRequest(
-            "새로운판매자",
-            "010-8888-8888",
-            "대구",
-            "새로운 인사말입니다.",
-            "999-999-99999"
+            nickname = "새로운판매자",
+            phoneNumber = "010-8888-8888",
+            address = "대구",
+            bio = "새로운 인사말입니다.",
+            businessNumber = "999-999-99999"
         )
 
         whenever(userRepository.findById(1L))
@@ -186,11 +182,11 @@ class UserServiceTest {
         val response = userService.updateMySellerProfile(1L, request)
 
         // then
-        Assertions.assertNotNull(response)
-        Assertions.assertEquals("새로운판매자", response.nickname)
-        Assertions.assertEquals("대구", response.address)
-        Assertions.assertEquals("새로운 인사말입니다.", response.bio)
-        Assertions.assertEquals("999-999-99999", response.businessNumber)
+        assertNotNull(response)
+        assertEquals("새로운판매자", response.nickname)
+        assertEquals("대구", response.address)
+        assertEquals("새로운 인사말입니다.", response.bio)
+        assertEquals("999-999-99999", response.businessNumber)
     }
 
     @Test
@@ -202,7 +198,10 @@ class UserServiceTest {
         val ex = assertThrows<BusinessException> {
             userService.getUserProfile(1L)
         }
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.errorCode)
+    }
 
-        Assertions.assertEquals(ErrorCode.USER_NOT_FOUND, ex.errorCode)
+    fun User.withId(id: Long): User = apply {
+        ReflectionTestUtils.setField(this, "id", id)
     }
 }
