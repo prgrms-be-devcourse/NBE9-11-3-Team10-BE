@@ -7,12 +7,10 @@ import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 
 data class AuthRegisterRequest(
-        @JvmField
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "이메일 형식이 올바르지 않습니다.")
         val email: String,
 
-        @JvmField
         @NotBlank(message = "비밀번호는 필수입니다.")
         @Pattern(
         regexp = "^(?=.*[A-Za-z])(?=.*\\d).{8,20}$",
@@ -20,11 +18,9 @@ data class AuthRegisterRequest(
         )
         val password: String,
 
-        @JvmField
         @NotBlank(message = "이름은 필수입니다.")
         val name: String,
 
-        @JvmField
         @NotBlank(message = "닉네임은 필수입니다.")
         @Pattern(
             regexp = "^[A-Za-z0-9가-힣_]{2,20}$",
@@ -32,7 +28,6 @@ data class AuthRegisterRequest(
         )
         val nickname: String,
 
-        @JvmField
         @NotBlank(message = "전화번호는 필수입니다.")
         @Pattern(
             regexp = "^010-?\\d{4}-?\\d{4}$",
@@ -40,11 +35,9 @@ data class AuthRegisterRequest(
         )
         val phoneNumber:  String,
 
-        @JvmField
         @NotBlank(message = "주소는 필수입니다.")
         val address: String,
 
-        @JvmField
         @NotNull(message = "역할은 필수입니다.")
         val role: Role
 )

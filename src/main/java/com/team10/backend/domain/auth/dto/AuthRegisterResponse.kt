@@ -5,11 +5,10 @@ import java.time.LocalDateTime
 
 data class AuthRegisterResponse(
     val id: Long,
-    @JvmField val email: String,
+    val email: String,
     val createdAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(user: User) = AuthRegisterResponse(
                 user.id,
                 user.email,

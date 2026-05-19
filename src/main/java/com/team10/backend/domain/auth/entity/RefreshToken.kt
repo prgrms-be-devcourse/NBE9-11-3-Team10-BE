@@ -31,7 +31,6 @@ class RefreshToken(
     }
 
     companion object {
-        @JvmStatic
         fun create(token: String, user: User): RefreshToken {
             return RefreshToken(
                 token,
