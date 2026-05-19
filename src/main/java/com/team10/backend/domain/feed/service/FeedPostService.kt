@@ -38,8 +38,9 @@ class FeedPostService(
         }
 
         val currentUser = getNullableUser(currentUserId)
+        val likedFeedPostIds = getLikedFeedPostIds(feedPosts, currentUser)
 
-        val feedDtos = feedPosts.map { feed -> toFeedDto(feed, currentUser) }
+        val feedDtos = feedPosts.map { feed -> toFeedDto(feed, likedFeedPostIds) }
 
         return FeedListResponseDto(feedDtos)
     }
@@ -136,21 +137,23 @@ class FeedPostService(
         }
     }
 
-    // 로그인 사용자가 있으면 좋아요 여부를 포함해 FeedDto로 변환한다.
-    private fun toFeedDto(feed: FeedPost, currentUser: User?): FeedDto {
-        val liked = isLiked(feed, currentUser)
-        return from(feed, liked)
+    private fun getLikedFeedPostIds(feedPosts: List<FeedPost>, currentUser: User?): Set<Long> {
+        if (currentUser == null) {
+            return emptySet()
+        }
+
+        val feedPostIds = feedPosts.map { feed -> feed.getId() }
+        if (feedPostIds.isEmpty()) {
+            return emptySet()
+        }
+
+        return feedLikeRepository.findLikedFeedPostIdsByUserId(currentUser.getId(), feedPostIds).toSet()
     }
 
-    // 비로그인 사용자는 false, 로그인 사용자는 좋아요 여부를 계산한다.
-    private fun isLiked(feed: FeedPost, currentUser: User?): Boolean {
-        if (currentUser == null) {
-            return false
-        }
-
-        return feed.feedLikes.any { like ->
-            like.user.id == currentUser.id
-        }
+    // 로그인 사용자가 있으면 일괄 조회한 좋아요 여부를 포함해 FeedDto로 변환한다.
+    private fun toFeedDto(feed: FeedPost, likedFeedPostIds: Set<Long>): FeedDto {
+        val liked = feed.getId() in likedFeedPostIds
+        return from(feed, liked)
     }
 
     // 좋아요가 이미 있으면 취소하고, 없으면 새로 생성한다.

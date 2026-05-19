@@ -60,7 +60,8 @@ class FeedCommentService(
 
         val pageable = createPageable(page, size, sort)
         val commentPage = feedCommentRepository.findAllByFeedPostId(feedId, pageable)
-        val comments = commentPage.content.map { comment -> toCommentResponse(comment, currentUser) }
+        val likedCommentIds = getLikedCommentIds(commentPage.content, currentUser)
+        val comments = commentPage.content.map { comment -> toCommentResponse(comment, likedCommentIds, currentUser) }
 
         return CommentListResponseDto(comments, toPaginationDto(commentPage))
     }
@@ -179,12 +180,25 @@ class FeedCommentService(
         return if (userId == null) null else getUser(userId)
     }
 
-    private fun toCommentResponse(comment: FeedComment, currentUser: User?): CommentResponseDto {
-        val liked = currentUser != null
-                && feedCommentLikeRepository.existsByFeedCommentIdAndUserId(
-                    comment.getId(),
-                    currentUser.getId()
-                )
+    private fun getLikedCommentIds(comments: List<FeedComment>, currentUser: User?): Set<Long> {
+        if (currentUser == null) {
+            return emptySet()
+        }
+
+        val commentIds = comments.map { comment -> comment.getId() }
+        if (commentIds.isEmpty()) {
+            return emptySet()
+        }
+
+        return feedCommentLikeRepository.findLikedCommentIdsByUserId(currentUser.getId(), commentIds).toSet()
+    }
+
+    private fun toCommentResponse(
+        comment: FeedComment,
+        likedCommentIds: Set<Long>,
+        currentUser: User?
+    ): CommentResponseDto {
+        val liked = comment.getId() in likedCommentIds
         return from(comment, liked, currentUser)
     }
 
