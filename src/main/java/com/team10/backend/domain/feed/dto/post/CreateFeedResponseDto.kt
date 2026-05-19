@@ -11,10 +11,10 @@ data class CreateFeedResponseDto(
     companion object {
         fun from(feedPost: FeedPost): CreateFeedResponseDto {
             return CreateFeedResponseDto(
-                feedPost.getId(),
+                feedPost.id,
                 feedPost.content,
                 feedPost.imageUrl,
-                feedPost.getCreatedAt().toString()
+                feedPost.createdAt.toString()
             )
         }
     }

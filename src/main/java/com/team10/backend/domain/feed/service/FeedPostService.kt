@@ -142,25 +142,25 @@ class FeedPostService(
             return emptySet()
         }
 
-        val feedPostIds = feedPosts.map { feed -> feed.getId() }
+        val feedPostIds = feedPosts.map { feed -> feed.id }
         if (feedPostIds.isEmpty()) {
             return emptySet()
         }
 
-        return feedLikeRepository.findLikedFeedPostIdsByUserId(currentUser.getId(), feedPostIds).toSet()
+        return feedLikeRepository.findLikedFeedPostIdsByUserId(currentUser.id, feedPostIds).toSet()
     }
 
     // 로그인 사용자가 있으면 일괄 조회한 좋아요 여부를 포함해 FeedDto로 변환한다.
     private fun toFeedDto(feed: FeedPost, likedFeedPostIds: Set<Long>): FeedDto {
-        val liked = feed.getId() in likedFeedPostIds
+        val liked = feed.id in likedFeedPostIds
         return from(feed, liked)
     }
 
     // 좋아요가 이미 있으면 취소하고, 없으면 새로 생성한다.
     private fun toggleLike(feedPost: FeedPost, currentUser: User): Boolean {
         val existingLike = feedLikeRepository.findByFeedPostIdAndUserId(
-            feedPost.getId(),
-            currentUser.getId()
+            feedPost.id,
+            currentUser.id
         )
 
         if (existingLike != null) {
