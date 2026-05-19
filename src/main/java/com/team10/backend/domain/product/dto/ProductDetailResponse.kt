@@ -6,20 +6,19 @@ import com.team10.backend.domain.product.enums.ProductType
 import java.time.LocalDateTime
 
 data class ProductDetailResponse(
-    @JvmField val productId: Long,
-    @JvmField val productName: String,
-    @JvmField val description: String?,
-    @JvmField val price: Int,
-    @JvmField val stock: Int,
-    @JvmField val nickname: String,
-    @JvmField val imageUrl: String?,
-    @JvmField val type: ProductType,
-    @JvmField val status: ProductStatus,
+    val productId: Long,
+    val productName: String,
+    val description: String?,
+    val price: Int,
+    val stock: Int,
+    val nickname: String,
+    val imageUrl: String?,
+    val type: ProductType,
+    val status: ProductStatus,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(product: Product): ProductDetailResponse {
             return ProductDetailResponse(
                 product.id,
