@@ -214,6 +214,7 @@ class OrderControllerTest {
         // When & Then
         mvc.perform(
             post("/api/v1/orders")
+                .with(authentication(getAuthentication(1L, Role.BUYER)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req))
         )
@@ -240,7 +241,7 @@ class OrderControllerTest {
         resultActions
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.errorCode").value(ErrorCode.PRODUCT_NOT_FOUND.code))
-            .andExpect(jsonPath("$.detail").value("상품을 찾을 수 없습니다."))
+            .andExpect(jsonPath("$.detail").value("상품을 찾을 수 없습니다. ID: 999"))
     }
 
     @Test

@@ -43,15 +43,14 @@ import java.util.function.Function
 }
  */
 data class OrderDetailResponse(
-    @JvmField val orderNumber: String,
-    @JvmField val totalAmount: Int,
-    @JvmField val paymentStatus: String,
-    @JvmField val createdAt: LocalDateTime,
-    @JvmField val delivery: OrderDeliveryDto,
-    @JvmField val orderItems: List<OrderItemDto> // MutableList와 ? 제거
+    val orderNumber: String,
+    val totalAmount: Int,
+    val paymentStatus: String,
+    val createdAt: LocalDateTime,
+    val delivery: OrderDeliveryDto,
+    val orderItems: List<OrderItemDto> // MutableList와 ? 제거
 ) {
     companion object {
-        @JvmStatic
         fun from(order: Order): OrderDetailResponse {
             // 1. 결제 상태 추출 (Safe call + Elvis 연산자)
             val paymentStatus = order.payments.firstOrNull()?.status?.name ?: "READY"

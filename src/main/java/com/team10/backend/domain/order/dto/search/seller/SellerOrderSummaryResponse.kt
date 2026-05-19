@@ -4,16 +4,15 @@ import com.team10.backend.domain.order.entity.OrderProducts
 import java.time.LocalDateTime
 
 data class SellerOrderSummaryResponse(
-    @JvmField  val orderNumber: String,
-    @JvmField  val buyerName: String,
-    @JvmField  val productName: String,
-    @JvmField val quantity: Int,
-    @JvmField val totalAmount: Int,
-    @JvmField val createdAt: LocalDateTime,
-    @JvmField val status: String
+    val orderNumber: String,
+    val buyerName: String,
+    val productName: String,
+    val quantity: Int,
+    val totalAmount: Int,
+    val createdAt: LocalDateTime,
+    val status: String
 ) {
     companion object {
-        @JvmStatic
         fun from(op: OrderProducts): SellerOrderSummaryResponse {
 
             val order = op.order ?: throw IllegalStateException("해당 상품에 연결된 주문이 없습니다.")
