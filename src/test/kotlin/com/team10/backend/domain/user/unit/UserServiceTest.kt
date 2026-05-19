@@ -27,7 +27,7 @@ import java.time.LocalDateTime
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
-class UserServiceTest {
+internal class UserServiceTest {
     @Mock
     lateinit  var userRepository: UserRepository
 
