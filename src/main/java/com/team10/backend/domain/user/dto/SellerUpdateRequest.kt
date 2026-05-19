@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 data class SellerUpdateRequest(
-        @JvmField
         @NotBlank(message = "닉네임은 필수입니다.")
         @Pattern(
             regexp = "^[A-Za-z0-9가-힣_]{2,20}$",
@@ -13,7 +12,6 @@ data class SellerUpdateRequest(
         )
         val nickname: String,
 
-        @JvmField
         @NotBlank(message = "전화번호는 필수입니다.")
         @Pattern(
             regexp = "^010-?\\d{4}-?\\d{4}$",
@@ -21,14 +19,11 @@ data class SellerUpdateRequest(
         )
         val phoneNumber: String,
 
-        @JvmField
         @NotBlank(message = "주소는 필수입니다.")
         val address: String,
 
-        @JvmField
         @Size(max = 500, message = "소개글은 500자 이하입니다.")
         val bio:  String?,
 
-        @JvmField
         val businessNumber: String?
 )

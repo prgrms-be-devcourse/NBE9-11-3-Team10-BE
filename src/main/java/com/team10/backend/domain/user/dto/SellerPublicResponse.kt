@@ -9,7 +9,6 @@ data class SellerPublicResponse(
     val bio: String?
 ) {
     companion object {
-        @JvmStatic
         fun from(user: User): SellerPublicResponse {
             val sellerInfo = requireNotNull(user.sellerInfo)
 
