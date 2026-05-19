@@ -9,6 +9,7 @@ import com.team10.backend.global.idempotency.IdempotencyStatus
 import com.team10.backend.global.idempotency.IdempotencyStore
 import com.team10.backend.global.idempotency.Idempotent
 import com.team10.backend.global.idempotency.exception.IdempotencyException
+import com.team10.backend.global.idempotency.interceptor.IdempotencyKeyInterceptor
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -91,10 +92,7 @@ class IdempotencyAspect(
     private fun extractIdempotencyKey(): String? {
         val attrs = (RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes)
             ?: return null
-
-        // 1순위: Interceptor/Filter에서 설정한 Request Attribute
-        // 2순위: 직접 HTTP Header 조회 (Fallback)
-        return attrs.request.getAttribute("IDEMPOTENCY_KEY") as? String
-            ?: attrs.request.getHeader("Idempotency-Key")
+        // Interceptor 가 설정한 속성만 읽음 (헤더 직접 읽기 불필요)
+        return attrs.request.getAttribute(IdempotencyKeyInterceptor.REQUEST_ATTRIBUTE_KEY) as? String
     }
 }
