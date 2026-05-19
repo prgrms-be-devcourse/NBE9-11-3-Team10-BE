@@ -40,7 +40,7 @@ class SecurityConfig(
                         "/v3/api-docs/**"
                     ).permitAll()
 
-                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+                    .requestMatchers( "/api/v1/auth/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/stores/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
