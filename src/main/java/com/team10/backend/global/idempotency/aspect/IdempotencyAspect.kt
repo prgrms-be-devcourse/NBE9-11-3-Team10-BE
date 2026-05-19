@@ -1,5 +1,6 @@
 package com.team10.backend.global.idempotency.aspect
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -17,9 +18,11 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.lang.reflect.ParameterizedType
 
 @Aspect
 @Component
@@ -29,8 +32,10 @@ class IdempotencyAspect(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val objectMapper: ObjectMapper =
-        ObjectMapper().registerModule(JavaTimeModule()).registerModule(KotlinModule.Builder().build())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        ObjectMapper().registerModule(JavaTimeModule())  // ✅ Java 8 시간 API 지원
+            .registerModule(KotlinModule.Builder().build())  // ✅ Kotlin 데이터 클래스 지원
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)  // ✅ ISO-8601 문자열 형식 유지
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)  // ✅ 유연한 역직렬화
 
     @Around("@annotation(com.team10.backend.global.idempotency.Idempotent)")
     fun handleIdempotency(joinPoint: ProceedingJoinPoint): Any {
@@ -46,11 +51,23 @@ class IdempotencyAspect(
         return when (val status = store.checkAndLock(key, annotation.lockTtlSec)) {
             IdempotencyStatus.COMPLETED -> {
                 val cachedJson = store.getResponse(key)
-                    ?: throw IdempotencyException(
-                        ErrorCode.IDEMPOTENCY_CACHE_MISS,
-                        "Cache miss for completed key: $key"
-                    )
-                objectMapper.readValue(cachedJson, methodSignature.returnType)
+                    ?: throw IdempotencyException(ErrorCode.IDEMPOTENCY_CACHE_MISS, "Cache miss for key: $key")
+
+                val javaType = methodSignature.method.genericReturnType?.let { genericType ->
+                    when (genericType) {
+                        is ParameterizedType -> {
+                            val actualType = genericType.actualTypeArguments.firstOrNull()
+                            actualType?.let { objectMapper.typeFactory.constructType(it) }
+                                ?: objectMapper.typeFactory.constructType(genericType)
+                        }
+                        is Class<*> -> objectMapper.typeFactory.constructType(genericType)
+                        else -> objectMapper.typeFactory.constructType(genericType)
+                    }
+                } ?: objectMapper.typeFactory.constructType(methodSignature.returnType)
+
+                @Suppress("UNCHECKED_CAST")
+                val responseBody = objectMapper.readValue(cachedJson, javaType) as Any?
+                ResponseEntity.ok(responseBody)
             }
 
             IdempotencyStatus.LOCKED -> {
@@ -75,15 +92,24 @@ class IdempotencyAspect(
         return try {
             val result = joinPoint.proceed()
 
-            // 응답 직렬화 및 저장 (경쟁 상태일 수 있으므로 반환값 체크)
-            val cachedJson = objectMapper.writeValueAsString(result)
+            // ✅ ResponseEntity 에서 실제 응답 본문 추출
+            val responseBody = if (result is ResponseEntity<*>) {
+                result.body ?: throw IdempotencyException(
+                    ErrorCode.INTERNAL_SERVER_ERROR,
+                    "Response body is null"
+                )
+            } else result
+
+            // 본문만 직렬화하여 저장
+            val cachedJson = objectMapper.writeValueAsString(responseBody)
             val success = store.complete(key, cachedJson, annotation.cacheTtlSec)
+
             if (!success) {
-                log.warn("Idempotency cache update failed for key: $key. Possible race condition.")
+                log.warn("Idempotency cache update failed for key: $key")
             }
-            result
+
+            result // 원래 ResponseEntity 그대로 반환
         } catch (e: Throwable) {
-            // 비즈니스 로직 실패 시 LOCK 상태 즉시 해제 (다음 요청이 정상 진입 가능)
             store.release(key)
             throw e
         }

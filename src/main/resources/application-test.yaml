@@ -17,6 +17,8 @@ logging:
 custom:
   jwt:
     secretKey: RjnNJn0bpT1nvG1AgH2vbTOvkB1iMzlX3+Evusj2n/U=
+    accessTokenExpiration: 3600000  # 1 시간 (밀리초)
+    refreshTokenExpiration: 604800000  # 7 일 (밀리초)
     expireTime: 1
   toss:
     payment:

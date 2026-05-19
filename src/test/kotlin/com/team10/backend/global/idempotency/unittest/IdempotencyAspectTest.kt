@@ -22,6 +22,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -115,6 +116,7 @@ class IdempotencyAspectTest {
                 DummyIdempotent::class.java.getAnnotation(Idempotent::class.java)
             )
             lenient().`when`(methodSignature.returnType).thenReturn(DEFAULT_RETURN_TYPE)
+            lenient().`when`(method.genericReturnType).thenReturn(DEFAULT_RETURN_TYPE)
         }
 
         @Test
@@ -129,9 +131,17 @@ class IdempotencyAspectTest {
             val result = aspect.handleIdempotency(joinPoint)
 
             // Then
-            assertTrue(result is Map<*, *>) // JSON 이 Map 으로 역직렬화됨
-            assertEquals("cached", (result as Map<*, *>)["result"])
-            verify(store, never()).complete(any(), any(), any()) // 캐시 히트 시 저장 안 함
+            // ✅ ResponseEntity 래퍼 처리
+            assertTrue(result is ResponseEntity<*>, "결과가 ResponseEntity 여야 함")
+
+            val responseBody = (result as ResponseEntity<*>).body
+            assertTrue(responseBody is Map<*, *>, "response body 가 Map 이어야 함")
+
+            @Suppress("UNCHECKED_CAST")
+            val bodyMap = responseBody as Map<String, Any>
+            assertEquals("cached", bodyMap["result"])
+
+            verify(store, never()).complete(any(), any(), any()) // 캐시 히트 시 저장 안 함}
         }
 
         @Test
