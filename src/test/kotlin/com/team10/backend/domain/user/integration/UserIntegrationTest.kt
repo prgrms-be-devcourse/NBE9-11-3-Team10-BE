@@ -7,7 +7,7 @@ import com.team10.backend.domain.user.dto.UserUpdateRequest
 import com.team10.backend.domain.user.entity.User
 import com.team10.backend.domain.user.repository.UserRepository
 import com.team10.backend.fixture.UserFixture
-import com.team10.backend.global.test.AuthTestHelper
+import com.team10.backend.helper.AuthTestHelper
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
