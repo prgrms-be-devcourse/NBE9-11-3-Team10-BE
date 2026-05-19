@@ -101,7 +101,7 @@ class FeedCommentControllerTest @Autowired constructor(
             .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(true))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.content").value("댓글 생성 테스트입니다."))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.writer.userId").value(2))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.isMine").value(true))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.mine").value(true))
     }
 
     @Test
@@ -126,7 +126,7 @@ class FeedCommentControllerTest @Autowired constructor(
             .andExpect(MockMvcResultMatchers.status().isOk())
             .andExpect(MockMvcResultMatchers.jsonPath("$.success").value(true))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.comments[0].content").value("댓글 조회 테스트입니다."))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.comments[0].isMine").value(true))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.comments[0].mine").value(true))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.pagination.currentPage").value(0))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.pagination.totalElements").value(1))
     }
@@ -205,7 +205,7 @@ class FeedCommentControllerTest @Autowired constructor(
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.commentId").value(203))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.content").value("댓글 수정 후입니다."))
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.writer.userId").value(2))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.data.isMine").value(true))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data.mine").value(true))
     }
 
     @Test
