@@ -1,8 +1,12 @@
-package com.team10.backend.global.exception;
+package com.team10.backend.global.exception
 
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatus
 
-public enum ErrorCode {
+enum class ErrorCode(
+    val code: String,
+    val message: String,
+    val status: HttpStatus
+) {
 
     // === 공통 (1000~1999) ===
     INTERNAL_SERVER_ERROR("COMMON_001", "서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -19,7 +23,7 @@ public enum ErrorCode {
     LOGIN_FAILED("USER_004", "아이디 또는 비밀번호가 일치하지 않습니다.", HttpStatus.NOT_FOUND),
     NOT_SELLER("USER_005", "판매자가 아닙니다.", HttpStatus.FORBIDDEN),
 
-    // === 상품 도메인 (3000~3999) ===,
+    // === 상품 도메인 (3000~3999) ===
     PRODUCT_NOT_FOUND("PRODUCT_001", "상품을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     INSUFFICIENT_STOCK("PRODUCT_002", "재고가 부족합니다.", HttpStatus.BAD_REQUEST),
     PRODUCT_ALREADY_INACTIVE("PRODUCT_003", "이미 비활성화된 상품입니다.", HttpStatus.CONFLICT),
@@ -50,21 +54,29 @@ public enum ErrorCode {
     SHIPPING_ADDRESS_REQUIRED("DELIVERY_03", "배송 주소는 필수 항목입니다.", HttpStatus.BAD_REQUEST),
 
     // === 멱등성 도메인 (8000~8999) ===
-    IDEMPOTENCY_KEY_MISSING("IDEMPOTENCY_001",
-            "요청에 'Idempotency-Key' 헤더가 필요합니다.",
-            HttpStatus.BAD_REQUEST),
+    IDEMPOTENCY_KEY_MISSING(
+        "IDEMPOTENCY_001",
+        "요청에 'Idempotency-Key' 헤더가 필요합니다.",
+        HttpStatus.BAD_REQUEST
+    ),
 
-    IDEMPOTENCY_KEY_INVALID("IDEMPOTENCY_002",  // ← 새로 추가
-            "잘못된 형식의 Idempotency-Key 입니다.",
-            HttpStatus.BAD_REQUEST),
+    IDEMPOTENCY_KEY_INVALID(
+        "IDEMPOTENCY_002",  // ← 새로 추가
+        "잘못된 형식의 Idempotency-Key 입니다.",
+        HttpStatus.BAD_REQUEST
+    ),
 
-    IDEMPOTENCY_REQUEST_IN_PROGRESS("IDEMPOTENCY_003",
-            "동일한 요청이 이미 처리 중입니다. 잠시 후 재시도해주세요.",
-            HttpStatus.CONFLICT),
+    IDEMPOTENCY_REQUEST_IN_PROGRESS(
+        "IDEMPOTENCY_003",
+        "동일한 요청이 이미 처리 중입니다. 잠시 후 재시도해주세요.",
+        HttpStatus.CONFLICT
+    ),
 
-    IDEMPOTENCY_CACHE_MISS("IDEMPOTENCY_004",
-            "내부 캐시 오류가 발생했습니다.",
-            HttpStatus.INTERNAL_SERVER_ERROR),
+    IDEMPOTENCY_CACHE_MISS(
+        "IDEMPOTENCY_004",
+        "내부 캐시 오류가 발생했습니다.",
+        HttpStatus.INTERNAL_SERVER_ERROR
+    ),
 
     //====토스 외부 API 예외처리=====
     // -------승인 비즈니스 오류(400,404,403)-----
@@ -90,13 +102,23 @@ public enum ErrorCode {
     INVALID_CARD_NUMBER("TOSS_15", "카드번호를 다시 확인해주세요.", HttpStatus.BAD_REQUEST),
     INVALID_ACCOUNT_INFO_RE_REGISTER("TOSS_16", "유효하지 않은 계좌입니다. 계좌 재등록 후 시도해주세요.", HttpStatus.BAD_REQUEST),
     UNAPPROVED_ORDER_ID("TOSS_17", "아직 승인되지 않은 주문번호입니다.", HttpStatus.BAD_REQUEST),
+
     //----승인 시스템 오류(토스측 오류, 500,401..)-----
     FAILED_PAYMENT_INTERNAL_SYSTEM_PROCESSING("TOSS_18", "결제가 완료되지 않았어요. 다시 시도해주세요.", HttpStatus.INTERNAL_SERVER_ERROR),
     UNKNOWN_PAYMENT_ERROR("TOSS_19", "내부 시스템 처리 작업이 실패했습니다. 잠시 후 다시 시도해주세요", HttpStatus.INTERNAL_SERVER_ERROR),
-    FAILED_INTERNAL_SYSTEM_PROCESSING("TOSS_20", "내부 시스템 처리 작업이 실패했습니다. 잠시 후 다시 시도해주세요.", HttpStatus.INTERNAL_SERVER_ERROR),
+    FAILED_INTERNAL_SYSTEM_PROCESSING(
+        "TOSS_20",
+        "내부 시스템 처리 작업이 실패했습니다. 잠시 후 다시 시도해주세요.",
+        HttpStatus.INTERNAL_SERVER_ERROR
+    ),
+
     //-----네트워크 오류 ------
     //503 서버가 현재 요청을 처리할 수 없음 (일시적 부하 또는 통신 장애).
-    NETWORK_ERROR_FINAL_FAILED("NETWORK_01", "결제 결과를 확인할 수 없습니다. 중복 결제를 방지하기 위해 잠시 후 결제 내역을 확인해 주세요.", HttpStatus.SERVICE_UNAVAILABLE),
+    NETWORK_ERROR_FINAL_FAILED(
+        "NETWORK_01",
+        "결제 결과를 확인할 수 없습니다. 중복 결제를 방지하기 위해 잠시 후 결제 내역을 확인해 주세요.",
+        HttpStatus.SERVICE_UNAVAILABLE
+    ),
 
     //-----취소 비즈니스 오류(400,401,403,404)------
     UNAUTHORIZED_KEY("TOSS_21", "인증되지 않은 시크릿 키 혹은 클라이언트 키 입니다.", HttpStatus.UNAUTHORIZED),
@@ -107,27 +129,5 @@ public enum ErrorCode {
     REFUND_REJECTED("TOSS_25", "환불이 거절됐습니다. 결제사에 문의 부탁드립니다.", HttpStatus.NOT_FOUND),
 
     //---취소 시스템 에러(500)
-    COMMON_ERROR("TOSS_26", "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", HttpStatus.INTERNAL_SERVER_ERROR);
-
-    private final String code;        // 프론트에서 분기용 비즈니스 코드
-    private final String message;     // 기본 메시지 (상세 설명은 동적 생성 가능)
-    private final HttpStatus status;  // HTTP 상태코드
-
-    private ErrorCode(String code, String message, HttpStatus status) {
-        this.code = code;
-        this.message = message;
-        this.status = status;
-    }
-
-    public String getCode() {
-        return this.code;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
-
-    public HttpStatus getStatus() {
-        return this.status;
-    }
+    COMMON_ERROR("TOSS_26", "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", HttpStatus.INTERNAL_SERVER_ERROR)
 }

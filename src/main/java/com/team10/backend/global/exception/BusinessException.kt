@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus
 open class BusinessException : RuntimeException {
     val errorCode: ErrorCode
 
-    constructor(errorCode: ErrorCode) : super(errorCode.getMessage()) {
+    constructor(errorCode: ErrorCode) : super(errorCode.message) {
         this.errorCode = errorCode
     }
 
@@ -20,5 +20,5 @@ open class BusinessException : RuntimeException {
     }
 
     val status: HttpStatus
-        get() = errorCode.getStatus()
+        get() = errorCode.status
 }

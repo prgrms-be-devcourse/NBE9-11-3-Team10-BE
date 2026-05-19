@@ -9,6 +9,6 @@ class IdempotencyException(
     cause: Throwable? = null
 ) : BusinessException(
     errorCode = errorCode,
-    message = message ?: errorCode.getMessage(),
+    message = message ?: errorCode.message,
     cause = cause
 )
