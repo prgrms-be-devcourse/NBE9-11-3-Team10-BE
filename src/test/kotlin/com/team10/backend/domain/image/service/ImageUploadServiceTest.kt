@@ -59,7 +59,7 @@ internal class ImageUploadServiceTest {
     fun createPresignedUrlRejectsNonImageContentType() {
         val request = PresignedUrlRequest("memo.txt", "text/plain", "products")
 
-        Assertions.assertThatThrownBy{ imageUploadService.createPresignedUrl(request) }
+        Assertions.assertThatThrownBy { imageUploadService.createPresignedUrl(request) }
             .isInstanceOf(BusinessException::class.java)
     }
 
@@ -77,7 +77,7 @@ internal class ImageUploadServiceTest {
     fun deleteRejectsExternalImageUrl() {
         val imageUrl = "https://other-bucket.s3.ap-northeast-2.amazonaws.com/feeds/test-image.jpg"
 
-        Assertions.assertThatThrownBy{ imageUploadService.delete(imageUrl) }
+        Assertions.assertThatThrownBy { imageUploadService.delete(imageUrl) }
             .isInstanceOf(BusinessException::class.java)
         Mockito.verify(s3Client, Mockito.never()).deleteObject(
             ArgumentMatchers.any(
