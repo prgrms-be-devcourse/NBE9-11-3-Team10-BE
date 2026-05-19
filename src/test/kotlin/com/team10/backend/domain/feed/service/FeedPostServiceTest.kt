@@ -88,21 +88,29 @@ class FeedPostServiceTest @Autowired constructor(
         // given
         val sellerId = 1L
         jdbcTemplate.update(
-            "INSERT INTO feed_posts (image_url, content, user_id, like_count, comment_count, created_at, updated_at) " +
-                    "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            "INSERT INTO feed_posts (id, image_url, content, user_id, like_count, comment_count, created_at, updated_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            100L,
             "https://test.com/image.jpg",
             "테스트 내용",
             sellerId,
-            0,
+            1,
             0
+        )
+        jdbcTemplate.update(
+            "INSERT INTO feed_likes (feed_post_id, user_id, created_at, updated_at) " +
+                    "VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            100L,
+            2L
         )
 
         // when
-        val result = feedPostService.getFeedsList(sellerId, testUser.id)
+        val result = feedPostService.getFeedsList(sellerId, buyerUser.id)
 
         // then
         Assertions.assertThat(result.feeds).hasSize(1)
         Assertions.assertThat(result.feeds[0].content).isEqualTo("테스트 내용")
+        Assertions.assertThat(result.feeds[0].isLiked).isTrue()
     }
 
     @Test
