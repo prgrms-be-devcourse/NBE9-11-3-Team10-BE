@@ -47,3 +47,6 @@ db_dev.trace.db
 .env
 .env.*
 !.env.example
+
+### kotlin ###
+.kotlin/errors/**
