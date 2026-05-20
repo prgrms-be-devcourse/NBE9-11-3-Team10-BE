@@ -1,11 +1,9 @@
 package com.team10.backend.domain.order.service
 
 import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse
-import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse.Companion.from
 import com.team10.backend.domain.order.dto.webhook.WebhookPayload
 import com.team10.backend.domain.order.entity.Order
 import com.team10.backend.domain.order.entity.Payment
-import com.team10.backend.domain.order.entity.Payment.Companion.createPayment
 import com.team10.backend.domain.order.enums.PaymentStatus
 import com.team10.backend.domain.order.enums.RequestType
 import com.team10.backend.domain.order.repository.PaymentRepository
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.ObjectMapper
 import java.util.*
-import java.util.function.Supplier
 
 @Service
 class PaymentStatusService(

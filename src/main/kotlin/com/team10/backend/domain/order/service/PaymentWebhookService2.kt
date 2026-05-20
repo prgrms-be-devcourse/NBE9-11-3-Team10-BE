@@ -7,9 +7,6 @@ import com.team10.backend.domain.order.repository.OrderRepository
 import com.team10.backend.domain.order.repository.PaymentRepository
 import com.team10.backend.global.exception.BusinessException
 import com.team10.backend.global.exception.ErrorCode
-import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
-import jakarta.persistence.PersistenceContextType
 import org.springframework.stereotype.Service
 
 @Service

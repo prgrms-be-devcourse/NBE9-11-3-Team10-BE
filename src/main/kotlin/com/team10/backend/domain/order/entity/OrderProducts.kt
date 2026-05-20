@@ -32,7 +32,6 @@ class OrderProducts(
     }
 
     companion object {
-        @JvmStatic
         fun builder() = OrderProductsBuilder()
     }
 

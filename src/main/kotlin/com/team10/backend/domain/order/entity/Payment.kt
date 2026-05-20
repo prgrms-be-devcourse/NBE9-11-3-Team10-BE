@@ -80,7 +80,6 @@ class Payment(
     fun getLastTossKey(): String? = this.idempotencyKey
 
     companion object {
-        @JvmStatic
         fun createPayment(
             order: Order,
             orderNumber: String,
@@ -98,7 +97,6 @@ class Payment(
                 .build()
         }
 
-        @JvmStatic
         fun builder() = PaymentBuilder()
     }
 

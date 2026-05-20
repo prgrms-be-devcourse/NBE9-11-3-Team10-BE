@@ -9,7 +9,6 @@ import com.team10.backend.domain.user.repository.UserRepository
 import com.team10.backend.global.exception.BusinessException
 import com.team10.backend.global.exception.ErrorCode
 import org.assertj.core.api.Assertions
-import org.assertj.core.api.ThrowableAssert
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
