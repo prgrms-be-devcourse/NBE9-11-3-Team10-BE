@@ -19,8 +19,7 @@ import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.*
 
-//import lombok.extern.slf4j.Slf4j;
-@Service //@Slf4j
+@Service
 class ImageUploadService(private val s3Client: S3Client, private val s3Presigner: S3Presigner) {
     @Value("\${cloud.aws.s3.bucket}")
     private lateinit var bucket: String

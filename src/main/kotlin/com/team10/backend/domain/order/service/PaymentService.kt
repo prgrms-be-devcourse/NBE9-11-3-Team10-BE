@@ -2,10 +2,8 @@ package com.team10.backend.domain.order.service
 
 import com.team10.backend.domain.order.dto.confirm.ConfirmRequest
 import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse
-import lombok.RequiredArgsConstructor
 import org.springframework.stereotype.Service
 
-//import lombok.extern.slf4j.Slf4j;
 @Service
 class PaymentService(
     private val paymentCheckService: PaymentCheckService,
