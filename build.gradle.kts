@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.back"
-version = "1.0.0-SNAPSHOT"
+version = "1.0.0"
 description = "NBE9-11-3-Team10"
 
 java {
