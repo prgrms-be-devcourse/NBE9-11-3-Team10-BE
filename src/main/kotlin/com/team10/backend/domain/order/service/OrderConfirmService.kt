@@ -20,8 +20,7 @@ import org.springframework.web.client.RestTemplate
 import tools.jackson.databind.ObjectMapper
 import java.util.*
 
-//import lombok.extern.slf4j.Slf4j;
-@Service //@Slf4j
+@Service
 class OrderConfirmService(
     private val objectMapper: ObjectMapper,
     private val restTemplate: RestTemplate,

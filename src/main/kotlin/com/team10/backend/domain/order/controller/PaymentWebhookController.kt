@@ -3,9 +3,6 @@ package com.team10.backend.domain.order.controller
 import com.team10.backend.domain.order.dto.webhook.WebhookPayload
 import com.team10.backend.domain.order.service.PaymentWebhookService2
 import com.team10.backend.global.dto.ApiResponse
-import com.team10.backend.global.dto.ApiResponse.Companion.ok
-import lombok.RequiredArgsConstructor
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody

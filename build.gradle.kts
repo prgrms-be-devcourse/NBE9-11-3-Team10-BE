@@ -79,19 +79,6 @@ dependencies {
     // 📌 DataFaker
     implementation("net.datafaker:datafaker:2.5.4")
     testImplementation("net.datafaker:datafaker:2.5.4")
-
-    // 📌 QueryDSL (KSP 기반, 추후 추가)
-//    implementation ("io.github.openfeign.querydsl:querydsl-jpa:7.1")
-//    kapt ("io.github.openfeign.querydsl:querydsl-apt:7.1:jpa")
-
-    // ✅ Lombok: Java용 (annotationProcessor) + Kotlin용 (kapt) 모두 등록
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
-    kapt("org.projectlombok:lombok")
-
-    // 테스트용도 동일하게 적용
-    testCompileOnly("org.projectlombok:lombok")
-    testAnnotationProcessor("org.projectlombok:lombok")
 }
 
 kotlin {
