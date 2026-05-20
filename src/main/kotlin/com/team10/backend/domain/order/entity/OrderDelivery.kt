@@ -42,7 +42,6 @@ class OrderDelivery(
     }
 
     companion object {
-        @JvmStatic
         fun builder() = OrderDeliveryBuilder()
     }
 

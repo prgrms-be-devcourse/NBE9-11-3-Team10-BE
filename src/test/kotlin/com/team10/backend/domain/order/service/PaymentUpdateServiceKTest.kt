@@ -7,7 +7,6 @@ import com.team10.backend.domain.order.entity.OrderDelivery
 import com.team10.backend.domain.order.entity.OrderProducts
 import com.team10.backend.domain.order.entity.Payment
 import com.team10.backend.domain.order.enums.OrderStatus
-import com.team10.backend.domain.order.enums.PaymentStatus
 import com.team10.backend.domain.order.repository.OrderDeliveryRepository
 import com.team10.backend.domain.order.repository.OrderRepository
 import com.team10.backend.domain.order.repository.PaymentRepository

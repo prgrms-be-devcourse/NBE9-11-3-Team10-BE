@@ -7,7 +7,6 @@ import java.net.URI
 import java.time.LocalDateTime
 
 object ErrorResponseUtil {
-    @JvmStatic
     fun buildProblemDetail(
         status: HttpStatus,
         errorCode: String,

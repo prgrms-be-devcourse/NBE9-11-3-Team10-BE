@@ -1,7 +1,6 @@
 package com.team10.backend.domain.order.service
 
 import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse
-import com.team10.backend.domain.order.entity.Order
 import com.team10.backend.domain.order.entity.Payment
 import com.team10.backend.domain.order.enums.DeliveryStatus
 import com.team10.backend.domain.order.enums.OrderStatus
@@ -12,30 +11,23 @@ import com.team10.backend.domain.order.enums.RequestType
 import com.team10.backend.domain.order.repository.OrderDeliveryRepository
 import com.team10.backend.domain.product.repository.ProductRepository
 import com.team10.backend.domain.user.repository.UserRepository
-import com.team10.backend.fixture.OrderDeliveryFixture
 import com.team10.backend.fixture.OrderFixture
 import com.team10.backend.fixture.PaymentFixture
 import com.team10.backend.fixture.ProductFixture
 import com.team10.backend.fixture.UserFixture
 import com.team10.backend.global.exception.BusinessException
 import com.team10.backend.global.exception.ErrorCode
-import jakarta.persistence.LockModeType
-import jakarta.transaction.Transactional
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.data.jpa.repository.Lock
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.times
-import org.mockito.ArgumentMatchers.any
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 // 만약 스레드 간의 타이밍 때문에 대기(Timeout)가 필요하다면 이것도 자주 씁니다.
-import org.mockito.Mockito.timeout
+
 @SpringBootTest(properties = [
     "SECRET_KEY=c3ByaW5nYm9vdHRlc3Rqd3RzZWNyZXRreXNhZmVhbG9uZ2Vub3VnaGZvcmhzMjU2YWxnb3JpdGht",
     "custom.jwt.secretKey=c3ByaW5nYm9vdHRlc3Rqd3RzZWNyZXRreXNhZmVhbG9uZ2Vub3VnaGZvcmhzMjU2YWxnb3JpdGht"

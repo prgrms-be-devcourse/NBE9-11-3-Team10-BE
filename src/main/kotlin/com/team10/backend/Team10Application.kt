@@ -8,11 +8,8 @@ import org.springframework.retry.annotation.EnableRetry
 @EnableRetry
 @SpringBootApplication
 @EnableJpaAuditing
-class Team10Application {
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            runApplication<Team10Application>(*args)
-        }
-    }
+class Team10Application
+
+fun main(args: Array<String>) {
+    runApplication<Team10Application>(*args)
 }

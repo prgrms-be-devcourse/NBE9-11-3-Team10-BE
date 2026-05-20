@@ -1,10 +1,6 @@
 package com.team10.backend.domain.order.service
 
 import com.team10.backend.domain.order.dto.confirm.TossConfirmResponse
-import com.team10.backend.domain.order.entity.Order
-import com.team10.backend.domain.order.entity.OrderDelivery
-import com.team10.backend.domain.order.entity.OrderProducts
-import com.team10.backend.domain.order.entity.Payment
 import com.team10.backend.domain.order.enums.OrderStatus
 import com.team10.backend.domain.order.enums.PaymentStatus
 import com.team10.backend.domain.order.repository.OrderDeliveryRepository
@@ -13,12 +9,9 @@ import com.team10.backend.domain.order.repository.PaymentRepository
 import com.team10.backend.domain.product.repository.ProductRepository
 import com.team10.backend.global.exception.BusinessException
 import com.team10.backend.global.exception.ErrorCode
-import lombok.RequiredArgsConstructor
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tools.jackson.databind.ObjectMapper
-import java.util.function.Function
-import java.util.function.Supplier
 
 @Service
 class PaymentUpdateService(

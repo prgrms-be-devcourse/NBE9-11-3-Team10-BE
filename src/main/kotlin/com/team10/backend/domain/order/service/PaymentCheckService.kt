@@ -6,7 +6,6 @@ import com.team10.backend.domain.order.repository.OrderRepository
 import com.team10.backend.domain.order.repository.PaymentRepository
 import com.team10.backend.global.exception.BusinessException
 import com.team10.backend.global.exception.ErrorCode
-import lombok.RequiredArgsConstructor
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

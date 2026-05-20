@@ -9,7 +9,6 @@ import com.team10.backend.global.exception.ErrorCode
 import jakarta.persistence.*
 import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.SQLRestriction
-import java.util.function.Consumer
 
 @Entity
 @Table(name = "orders")
@@ -79,7 +78,6 @@ class Order(
         fun builder() = OrderBuilder()
 
         // 생성 메서드 (서비스 레이어에서 사용)
-        @JvmStatic
         fun createOrder(
             user: User,
             orderNumber: String,
