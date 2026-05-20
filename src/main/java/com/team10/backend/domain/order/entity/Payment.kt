@@ -9,13 +9,7 @@ import jakarta.persistence.*
 
 @Entity
 @Table(
-    name = "payments",
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uk_order_idempotency",
-            columnNames = ["order_number", "idempotency_key"]
-        )
-    ]
+    name = "payments"
 )
 class Payment(
     @Column(name = "order_number", nullable = false)

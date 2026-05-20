@@ -31,14 +31,6 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
 
     fun findByOrderNumberAndType(orderNumber: String, type: RequestType): Payment?
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-        UPDATE Payment p 
-        SET p.status = com.team10.backend.domain.order.enums.PaymentStatus.PENDING 
-        WHERE p.id = :id 
-          AND p.status = com.team10.backend.domain.order.enums.PaymentStatus.UNCERTAIN
-    """)
-    fun updateStatusFromUncertainToPending(@Param("id") id: Long): Int
 
     // 미정산 결제 건 탐색용 (배치용)
     @Query("""

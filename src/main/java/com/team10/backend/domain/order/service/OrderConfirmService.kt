@@ -39,7 +39,7 @@ class OrderConfirmService(
         maxAttempts = 3,
         backoff = Backoff(delay = 1000, multiplier = 2.0) // 코틀린에서는 double 표기 명시
     )
-    fun sendConfirmRequest(request: ConfirmRequest, testCode: String?): TossConfirmResponse {
+    fun sendConfirmRequest(request: ConfirmRequest,idempotencyKey: String, testCode: String?): TossConfirmResponse {
         val headers = HttpHeaders()
 
         if (testCode != null) {
@@ -52,19 +52,18 @@ class OrderConfirmService(
         val order = orderRepository.findByOrderNumber(request.orderId)
             ?: throw BusinessException(ErrorCode.ORDER_NOT_FOUND)
 
-        val currentPayment = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT)
+        val currentPayment = paymentStatusService.getOrCreatePaymentAttempt(order, RequestType.PAYMENT,idempotencyKey)
 
-        // 이미 성공한 요청이면 저장된 응답 반환 (스마트 캐스트를 위해 명시적 반환 타입 보장)
+        // AOP 캐시가 만료된 이후 재진입 시 방어용
         if (currentPayment.status == PaymentStatus.PAID) {
             val responseBody = currentPayment.responseBody
                 ?: throw BusinessException(ErrorCode.PAYMENT_NOT_FOUND) // 혹은 데이터 정합성 에러
             return paymentStatusService.parseResponse(responseBody)
         }
 
-        val tossIdempotencyKey = currentPayment.idempotencyKey
         val suffix = if (testCode != null) UUID.randomUUID().toString() else ""
 
-        headers.set("Idempotency-Key", "$tossIdempotencyKey$suffix")
+        headers.set("Idempotency-Key", "$idempotencyKey$suffix")
         headers.set("Authorization", "Basic $encodedKey")
         headers.contentType = MediaType.APPLICATION_JSON
 
@@ -98,7 +97,7 @@ class OrderConfirmService(
 
     // 최종적으로 사용자에게 실패 응답을 던지거나, 관리자 알림을 보냄
     @Recover
-    fun recover(e: ResourceAccessException, request: ConfirmRequest, testCode: String?): TossConfirmResponse {
+    fun recover(e: ResourceAccessException, request: ConfirmRequest, idempotencyKey: String, testCode: String?): TossConfirmResponse {
         System.err.println("[ERROR] 결제 승인 최종 실패 - 주문번호: ${request.orderId}, 에러: ${e.message}")
 
         // TODO: 관리자에게 알람 로직 구현
